@@ -5,32 +5,29 @@
 #include "components/simple_scene.h"
 
 #if defined(WITH_LAB_M1)
-#   include "lab_m1/lab_list.h"
+#include "lab_m1/lab_list.h"
 #endif
 
 #if defined(WITH_LAB_M2)
-#   include "lab_m2/lab_list.h"
+#include "lab_m2/lab_list.h"
 #endif
 
 #if defined(WITH_LAB_EXTRA)
-#   include "lab_extra/lab_list.h"
+#include "lab_extra/lab_list.h"
 #endif
-
 
 #ifdef _WIN32
-    PREFER_DISCRETE_GPU_NVIDIA;
-    PREFER_DISCRETE_GPU_AMD;
+PREFER_DISCRETE_GPU_NVIDIA;
+PREFER_DISCRETE_GPU_AMD;
 #endif
 
-
-std::string GetParentDir(const std::string &filePath)
+std::string GetParentDir(const std::string& filePath)
 {
     size_t pos = filePath.find_last_of("\\/");
     return (std::string::npos == pos) ? "." : filePath.substr(0, pos);
 }
 
-
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
     srand((unsigned int)time(NULL));
 
@@ -44,13 +41,15 @@ int main(int argc, char **argv)
     (void)Engine::Init(wp);
 
     // Create a new 3D world and start running it
-    World *world = new gfxc::SimpleScene();
+    World* world = new gfxc::SimpleScene();
 
     world->Init();
     world->Run();
 
     // Signals to the Engine to release the OpenGL context
     Engine::Exit();
+
+    delete world;
 
     return 0;
 }
