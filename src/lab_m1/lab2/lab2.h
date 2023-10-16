@@ -4,19 +4,18 @@
 
 #include "components/simple_scene.h"
 
-
 namespace m1
 {
-    class Lab2 : public gfxc::SimpleScene
-    {
-     public:
+    class Lab2 : public gfxc::SimpleScene {
+    public:
         Lab2();
         ~Lab2();
 
         void Init() override;
 
-     private:
-        void CreateMesh(const char *name, const std::vector<VertexFormat> &vertices, const std::vector<unsigned int> &indices);
+    private:
+        void CreateMesh(const char* name, const std::vector<VertexFormat>& vertices,
+                        const std::vector<unsigned int>& indices);
 
         void FrameStart() override;
         void Update(float deltaTimeSeconds) override;
@@ -31,8 +30,11 @@ namespace m1
         void OnMouseScroll(int mouseX, int mouseY, int offsetX, int offsetY) override;
         void OnWindowResize(int width, int height) override;
 
-     protected:
+        void GenerateCircle();
+
+    protected:
         GLenum cullFace;
         GLenum polygonMode;
+        int resolution;
     };
-}   // namespace m1
+} // namespace m1

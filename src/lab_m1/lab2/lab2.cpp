@@ -1,6 +1,7 @@
 #include "lab_m1/lab2/lab2.h"
 
 #include "core/gpu/vertex_format.h"
+#include "utils/math_utils.h"
 #include <vector>
 #include <iostream>
 
@@ -29,6 +30,8 @@ void Lab2::Init()
     polygonMode = GL_FILL;
 
     glFrontFace(GL_CCW);
+
+    resolution = 4;
 
     // Load a mesh from file into GPU memory
     {
@@ -127,6 +130,11 @@ void Lab2::Init()
 
         // Actually create the mesh from the data
         CreateMesh("rectangle_ex6", vertices, indices);
+    }
+
+    // TODO(student): Bonus: create a circle programatically.
+    {
+        GenerateCircle();
     }
 }
 
@@ -240,6 +248,9 @@ void Lab2::Update(float deltaTimeSeconds)
     // TODO(student): Draw the square
     RenderMesh(meshes["rectangle_ex6"], shaders["VertexColor"], glm::vec3(2, 0, 2));
 
+    // TODO(student): Draw the circle
+    RenderMesh(meshes["circle_bonus"], shaders["VertexColor"], glm::vec3(10, 0, 0));
+
     // TODO(student): Disable face culling
     glDisable(GL_CULL_FACE);
 }
@@ -256,6 +267,13 @@ void Lab2::FrameEnd()
 
 void Lab2::OnInputUpdate(float deltaTime, int mods)
 {
+    if (window->KeyHold(GLFW_KEY_N) && resolution > 4) {
+        resolution--;
+        GenerateCircle();
+    } else if (window->KeyHold(GLFW_KEY_M)) {
+        resolution++;
+        GenerateCircle();
+    }
 }
 
 void Lab2::OnKeyPress(int key, int mods)
@@ -311,4 +329,24 @@ void Lab2::OnMouseScroll(int mouseX, int mouseY, int offsetX, int offsetY)
 
 void Lab2::OnWindowResize(int width, int height)
 {
+}
+
+void Lab2::GenerateCircle()
+{
+    vector<VertexFormat> vertices; //{ VertexFormat(glm::vec3(0, 0, 0), VertexColor::RED) };
+    vector<unsigned int> indices;
+
+    delete meshes["circle_bonus"];
+
+    for (int i = 0; i < resolution; i++) {
+        float arg = 2.f * M_PI * i / resolution;
+
+        vertices.push_back(VertexFormat(glm::vec3(cos(arg), sin(arg), 0), VertexColor::RED));
+        indices.push_back(i);
+    }
+
+    meshes["circle_bonus"] = new Mesh("generated circle bonus");
+
+    CreateMesh("circle_bonus", vertices, indices);
+    meshes["circle_bonus"]->SetDrawMode(GL_LINE_LOOP);
 }
