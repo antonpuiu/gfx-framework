@@ -10,6 +10,7 @@ endif()
 # Set the name of the project
 set(target_name GFXFramework)
 project(${target_name} C CXX)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 
 # Use C99 and C++11
@@ -323,3 +324,7 @@ if (NOT USE_DEV_COMPONENTS)
         COMMAND ${CMAKE_COMMAND} -E copy_if_different "${GFXF_ROOT_DIR}/deps/prebuilt/GFXComponents/${__cmake_arch}/GFXComponents.${__cmake_shared_suffix}" "${__target_dir}"
     )
 endif()
+
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+  COMMAND cp compile_commands.json ../)
+add_custom_target(run COMMAND ${PROJECT_NAME})
