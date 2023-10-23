@@ -1,5 +1,6 @@
 #include "lab_m1/lab3/lab3.h"
 
+#include <cmath>
 #include <vector>
 #include <iostream>
 
@@ -9,22 +10,18 @@
 using namespace std;
 using namespace m1;
 
-
 /*
  *  To find out more about `FrameStart`, `Update`, `FrameEnd`
  *  and the order in which they are called, see `world.cpp`.
  */
 
-
 Lab3::Lab3()
 {
 }
 
-
 Lab3::~Lab3()
 {
 }
-
 
 void Lab3::Init()
 {
@@ -37,7 +34,7 @@ void Lab3::Init()
     GetCameraInput()->SetActive(false);
 
     glm::vec3 corner = glm::vec3(0, 0, 0);
-    float squareSide = 100;
+    squareSide = 100;
 
     // TODO(student): Compute coordinates of a square's center, and store
     // then in the `cx` and `cy` class variables (see the header). Use
@@ -53,7 +50,10 @@ void Lab3::Init()
     scaleY = 1;
 
     // Initialize angularStep
-    angularStep = 0;
+    angularStep = 5;
+
+    increaseScale = true;
+    increaseTranslate = true;
 
     Mesh* square1 = object2D::CreateSquare("square1", corner, squareSide, glm::vec3(1, 0, 0), true);
     AddMeshToList(square1);
@@ -63,8 +63,9 @@ void Lab3::Init()
 
     Mesh* square3 = object2D::CreateSquare("square3", corner, squareSide, glm::vec3(0, 0, 1));
     AddMeshToList(square3);
-}
 
+    Mesh* carBody = object2D::CreateSquare("car_body", corner, 10, glm::vec3(1, 0, 0));
+}
 
 void Lab3::FrameStart()
 {
@@ -77,7 +78,6 @@ void Lab3::FrameStart()
     glViewport(0, 0, resolution.x, resolution.y);
 }
 
-
 void Lab3::Update(float deltaTimeSeconds)
 {
     // TODO(student): Update steps for translation, rotation and scale,
@@ -87,6 +87,9 @@ void Lab3::Update(float deltaTimeSeconds)
 
     modelMatrix = glm::mat3(1);
     modelMatrix *= transform2D::Translate(150, 250);
+    modelMatrix *= transform2D::Translate(squareSide / 2, squareSide / 2);
+    modelMatrix *= transform2D::Rotate(angularStep);
+    modelMatrix *= transform2D::Translate(-squareSide / 2, -squareSide / 2);
     // TODO(student): Create animations by multiplying the current
     // transform matrix with the matrices you just implemented.
     // Remember, the last matrix in the chain will take effect first!
@@ -95,6 +98,9 @@ void Lab3::Update(float deltaTimeSeconds)
 
     modelMatrix = glm::mat3(1);
     modelMatrix *= transform2D::Translate(400, 250);
+    modelMatrix *= transform2D::Translate(squareSide / 2, squareSide / 2);
+    modelMatrix *= transform2D::Scale(scaleX, scaleY);
+    modelMatrix *= transform2D::Translate(-squareSide / 2, -squareSide / 2);
     // TODO(student): Create animations by multiplying the current
     // transform matrix with the matrices you just implemented
     // Remember, the last matrix in the chain will take effect first!
@@ -103,64 +109,100 @@ void Lab3::Update(float deltaTimeSeconds)
 
     modelMatrix = glm::mat3(1);
     modelMatrix *= transform2D::Translate(650, 250);
+    modelMatrix *= transform2D::Translate(translateX, 0);
     // TODO(student): Create animations by multiplying the current
     // transform matrix with the matrices you just implemented
     // Remember, the last matrix in the chain will take effect first!
 
     RenderMesh2D(meshes["square3"], shaders["VertexColor"], modelMatrix);
-}
 
+    angularStep += deltaTimeSeconds;
+
+    if (increaseScale) {
+        scaleX += deltaTimeSeconds;
+        scaleY += deltaTimeSeconds;
+    } else {
+        scaleX -= deltaTimeSeconds;
+        scaleY -= deltaTimeSeconds;
+    }
+
+    if (increaseTranslate) {
+        translateX += 100 * deltaTimeSeconds;
+    } else {
+        translateX -= 100 * deltaTimeSeconds;
+    }
+
+    if (angularStep > 360.f)
+        angularStep = 0;
+
+    if (scaleX > MAX_SCALE || scaleY > MAX_SCALE) {
+        scaleX = MAX_SCALE;
+        scaleY = MAX_SCALE;
+
+        increaseScale = false;
+    }
+
+    if (scaleX < MIN_SCALE || scaleY < MIN_SCALE) {
+        scaleX = MIN_SCALE;
+        scaleY = MIN_SCALE;
+
+        increaseScale = true;
+    }
+
+    if (translateX > MAX_TRANSLATE) {
+        translateX = MAX_TRANSLATE;
+
+        increaseTranslate = false;
+    }
+
+    if (translateX < MIN_TRANSLATE) {
+        translateX = MIN_TRANSLATE;
+
+        increaseTranslate = true;
+    }
+}
 
 void Lab3::FrameEnd()
 {
 }
-
 
 /*
  *  These are callback functions. To find more about callbacks and
  *  how they behave, see `input_controller.h`.
  */
 
-
 void Lab3::OnInputUpdate(float deltaTime, int mods)
 {
 }
-
 
 void Lab3::OnKeyPress(int key, int mods)
 {
     // Add key press event
 }
 
-
 void Lab3::OnKeyRelease(int key, int mods)
 {
     // Add key release event
 }
-
 
 void Lab3::OnMouseMove(int mouseX, int mouseY, int deltaX, int deltaY)
 {
     // Add mouse move event
 }
 
-
 void Lab3::OnMouseBtnPress(int mouseX, int mouseY, int button, int mods)
 {
     // Add mouse button press event
 }
-
 
 void Lab3::OnMouseBtnRelease(int mouseX, int mouseY, int button, int mods)
 {
     // Add mouse button release event
 }
 
-
 void Lab3::OnMouseScroll(int mouseX, int mouseY, int offsetX, int offsetY)
 {
 }
-
 
 void Lab3::OnWindowResize(int width, int height)
 {
