@@ -9,29 +9,26 @@
 using namespace std;
 using namespace m1;
 
-
 /*
  *  To find out more about `FrameStart`, `Update`, `FrameEnd`
  *  and the order in which they are called, see `world.cpp`.
  */
 
-
 Lab4::Lab4()
 {
 }
 
-
 Lab4::~Lab4()
 {
 }
-
 
 void Lab4::Init()
 {
     polygonMode = GL_FILL;
 
     Mesh* mesh = new Mesh("box");
-    mesh->LoadMesh(PATH_JOIN(window->props.selfDir, RESOURCE_PATH::MODELS, "primitives"), "box.obj");
+    mesh->LoadMesh(PATH_JOIN(window->props.selfDir, RESOURCE_PATH::MODELS, "primitives"),
+                   "box.obj");
     meshes[mesh->GetMeshID()] = mesh;
 
     // Initialize tx, ty and tz (the translation steps)
@@ -61,7 +58,8 @@ void Lab4::FrameStart()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-void Lab4::RenderScene() {
+void Lab4::RenderScene()
+{
     modelMatrix = glm::mat4(1);
     modelMatrix *= transform3D::Translate(-2.5f, 0.5f, -1.5f);
     modelMatrix *= transform3D::Translate(translateX, translateY, translateZ);
@@ -94,9 +92,11 @@ void Lab4::Update(float deltaTimeSeconds)
     DrawCoordinateSystem();
 
     glClear(GL_DEPTH_BUFFER_BIT);
-    glViewport(miniViewportArea.x, miniViewportArea.y, miniViewportArea.width, miniViewportArea.height);
+    glViewport(miniViewportArea.x, miniViewportArea.y, miniViewportArea.width,
+               miniViewportArea.height);
 
     // TODO(student): render the scene again, in the new viewport
+    RenderScene();
     DrawCoordinateSystem();
 }
 
@@ -104,27 +104,80 @@ void Lab4::FrameEnd()
 {
 }
 
-
 /*
  *  These are callback functions. To find more about callbacks and
  *  how they behave, see `input_controller.h`.
  */
 
-
 void Lab4::OnInputUpdate(float deltaTime, int mods)
 {
     // TODO(student): Add transformation logic
+    if (window->KeyHold(GLFW_KEY_W)) {
+        translateX += deltaTime;
+    }
 
+    if (window->KeyHold(GLFW_KEY_S)) {
+        translateX -= deltaTime;
+    }
+
+    if (window->KeyHold(GLFW_KEY_A)) {
+        translateZ += deltaTime;
+    }
+
+    if (window->KeyHold(GLFW_KEY_D)) {
+        translateZ -= deltaTime;
+    }
+
+    if (window->KeyHold(GLFW_KEY_R)) {
+        translateY += deltaTime;
+    }
+
+    if (window->KeyHold(GLFW_KEY_F)) {
+        translateY -= deltaTime;
+    }
+
+    if (window->KeyHold(GLFW_KEY_1)) {
+        scaleX += deltaTime;
+        scaleY += deltaTime;
+        scaleZ += deltaTime;
+    }
+
+    if (window->KeyHold(GLFW_KEY_2)) {
+        scaleX -= deltaTime;
+        scaleY -= deltaTime;
+        scaleZ -= deltaTime;
+    }
+
+    if (window->KeyHold(GLFW_KEY_3)) {
+        angularStepOX += deltaTime;
+    }
+
+    if (window->KeyHold(GLFW_KEY_4)) {
+        angularStepOX -= deltaTime;
+    }
+
+    if (window->KeyHold(GLFW_KEY_5)) {
+        angularStepOY += deltaTime;
+    }
+
+    if (window->KeyHold(GLFW_KEY_6)) {
+        angularStepOY -= deltaTime;
+    }
+
+    if (window->KeyHold(GLFW_KEY_7)) {
+        angularStepOZ += deltaTime;
+    }
+
+    if (window->KeyHold(GLFW_KEY_8)) {
+        angularStepOZ -= deltaTime;
+    }
 }
-
 
 void Lab4::OnKeyPress(int key, int mods)
 {
     // Add key press event
-    if (key == GLFW_KEY_SPACE)
-    {
-        switch (polygonMode)
-        {
+    if (key == GLFW_KEY_SPACE) {
+        switch (polygonMode) {
         case GL_POINT:
             polygonMode = GL_FILL;
             break;
@@ -136,39 +189,58 @@ void Lab4::OnKeyPress(int key, int mods)
             break;
         }
     }
-    
-    // TODO(student): Add viewport movement and scaling logic
-}
 
+    // TODO(student): Add viewport movement and scaling logic
+    if (key == GLFW_KEY_I) {
+        miniViewportArea.y += 5;
+    }
+
+    if (key == GLFW_KEY_K) {
+        miniViewportArea.y -= 5;
+    }
+
+    if (key == GLFW_KEY_J) {
+        miniViewportArea.x -= 5;
+    }
+
+    if (key == GLFW_KEY_L) {
+        miniViewportArea.x += 5;
+    }
+
+    if (key == GLFW_KEY_U) {
+        miniViewportArea.height -= 5;
+        miniViewportArea.width -= 5;
+    }
+
+    if (key == GLFW_KEY_O) {
+        miniViewportArea.height += 5;
+        miniViewportArea.width += 5;
+    }
+}
 
 void Lab4::OnKeyRelease(int key, int mods)
 {
     // Add key release event
 }
 
-
 void Lab4::OnMouseMove(int mouseX, int mouseY, int deltaX, int deltaY)
 {
     // Add mouse move event
 }
-
 
 void Lab4::OnMouseBtnPress(int mouseX, int mouseY, int button, int mods)
 {
     // Add mouse button press event
 }
 
-
 void Lab4::OnMouseBtnRelease(int mouseX, int mouseY, int button, int mods)
 {
     // Add mouse button release event
 }
 
-
 void Lab4::OnMouseScroll(int mouseX, int mouseY, int offsetX, int offsetY)
 {
 }
-
 
 void Lab4::OnWindowResize(int width, int height)
 {
