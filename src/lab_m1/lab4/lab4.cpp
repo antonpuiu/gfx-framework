@@ -1,7 +1,9 @@
 #include "lab_m1/lab4/lab4.h"
 
+#include "core/gpu/vertex_format.h"
 #include <vector>
 #include <string>
+#include <random>
 #include <iostream>
 
 #include "lab_m1/lab4/transform3D.h"
@@ -26,11 +28,23 @@ void Lab4::Init()
 {
     polygonMode = GL_FILL;
 
-    Mesh* mesh = new Mesh("box");
-    mesh->LoadMesh(PATH_JOIN(window->props.selfDir, RESOURCE_PATH::MODELS, "primitives"),
-                   "box.obj");
-    meshes[mesh->GetMeshID()] = mesh;
+    {
+        Mesh* mesh = new Mesh("box");
+        mesh->LoadMesh(PATH_JOIN(window->props.selfDir, RESOURCE_PATH::MODELS, "primitives"),
+                       "box.obj");
+        meshes[mesh->GetMeshID()] = mesh;
+    }
 
+    {
+        Mesh* mesh = new Mesh("line");
+        vector<VertexFormat> veritces{ { { 0, 0, 0 }, { 1, 0, 0 } }, { { 1, 1, 1 }, { 1, 0, 0 } } };
+        vector<unsigned int> indices{ 0, 1 };
+
+        mesh->SetDrawMode(GL_LINES);
+        mesh->InitFromData(veritces, indices);
+
+        meshes[mesh->GetMeshID()] = mesh;
+    }
     // Initialize tx, ty and tz (the translation steps)
     translateX = 0;
     translateY = 0;
@@ -49,6 +63,15 @@ void Lab4::Init()
     // Sets the resolution of the small viewport
     glm::ivec2 resolution = window->GetResolution();
     miniViewportArea = ViewportArea(50, 50, resolution.x / 5.f, resolution.y / 5.f);
+}
+
+void Lab4::DrawLine(glm::vec3 a, glm::vec3 b)
+{
+    glm::mat4 m(1);
+
+    m = glm::translate(glm::mat4(1.0f), a) * glm::scale(glm::mat4(1.0f), b);
+
+    RenderMesh(meshes["line"], shaders["VertexColor"], m);
 }
 
 void Lab4::FrameStart()
@@ -87,6 +110,8 @@ void Lab4::Update(float deltaTimeSeconds)
     // Sets the screen area where to draw
     glm::ivec2 resolution = window->GetResolution();
     glViewport(0, 0, resolution.x, resolution.y);
+
+    DrawLine({ 0, 0, 0 }, head);
 
     RenderScene();
     DrawCoordinateSystem();
@@ -215,6 +240,20 @@ void Lab4::OnKeyPress(int key, int mods)
     if (key == GLFW_KEY_O) {
         miniViewportArea.height += 5;
         miniViewportArea.width += 5;
+    }
+
+    if (key == GLFW_KEY_T) {
+        std::random_device rd; // Initialize with a true random seed
+        std::mt19937 gen(rd()); // Mersenne Twister engine for high-quality randomness
+
+        // Define the range for the random floating-point numbers
+        float min_value = -2.0;
+        float max_value = 2.0;
+
+        // Create a distribution for floating-point numbers within the range
+        std::uniform_real_distribution<float> dist(min_value, max_value);
+
+        head = { dist(gen), dist(gen), dist(gen) };
     }
 }
 
