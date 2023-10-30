@@ -1,3 +1,4 @@
+#include "lab_m1/lab4/lab4.h"
 #include <ctime>
 #include <iostream>
 
@@ -41,7 +42,7 @@ int main(int argc, char** argv)
     (void)Engine::Init(wp);
 
     // Create a new 3D world and start running it
-    World* world = new gfxc::SimpleScene();
+    World* world = new m1::Lab4();
 
     world->Init();
     world->Run();
