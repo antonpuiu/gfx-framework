@@ -43,6 +43,6 @@ namespace m1
         bool increaseTranslate;
 
         // TODO(student): If you need any other class variables, define them here.
-        std::vector<Mesh> car;
+        float distance;
     };
 } // namespace m1

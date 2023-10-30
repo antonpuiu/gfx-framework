@@ -30,7 +30,3 @@ Mesh* object2D::CreateSquare(const std::string& name, glm::vec3 leftBottomCorner
     square->InitFromData(vertices, indices);
     return square;
 }
-
-Mesh* object2D::CreateCircle(const std::string& name, float radius, glm::vec3 color)
-{
-}

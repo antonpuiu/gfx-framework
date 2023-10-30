@@ -1,5 +1,6 @@
 #include "lab_m1/lab3/lab3.h"
 
+#include "utils/math_utils.h"
 #include <cmath>
 #include <vector>
 #include <iostream>
@@ -40,7 +41,6 @@ void Lab3::Init()
     // then in the `cx` and `cy` class variables (see the header). Use
     // `corner` and `squareSide`. These two class variables will be used
     // in the `Update()` function. Think about it, why do you need them?
-
     // Initialize tx and ty (the translation steps)
     translateX = 0;
     translateY = 0;
@@ -51,6 +51,7 @@ void Lab3::Init()
 
     // Initialize angularStep
     angularStep = 5;
+    distance = 0;
 
     increaseScale = true;
     increaseTranslate = true;
@@ -64,7 +65,17 @@ void Lab3::Init()
     Mesh* square3 = object2D::CreateSquare("square3", corner, squareSide, glm::vec3(0, 0, 1));
     AddMeshToList(square3);
 
-    Mesh* carBody = object2D::CreateSquare("car_body", corner, 10, glm::vec3(1, 0, 0));
+    Mesh* carBody = object2D::CreateSquare("carBody", corner, 50, glm::vec3(1, 0, 0));
+    AddMeshToList(carBody);
+
+    Mesh* carWindows = object2D::CreateSquare("carWindows", corner, 25, glm::vec3(0, 0, 1));
+    AddMeshToList(carWindows);
+
+    Mesh* carWheel = object2D::CreateSquare("carWheel", corner, 20, glm::vec3(0, 1, 0));
+    AddMeshToList(carWheel);
+
+    Mesh* carWheel2 = object2D::CreateSquare("carWheel2", corner, 20, glm::vec3(0, 1, 0));
+    AddMeshToList(carWheel2);
 }
 
 void Lab3::FrameStart()
@@ -115,6 +126,28 @@ void Lab3::Update(float deltaTimeSeconds)
     // Remember, the last matrix in the chain will take effect first!
 
     RenderMesh2D(meshes["square3"], shaders["VertexColor"], modelMatrix);
+
+    modelMatrix = glm::mat3(1);
+    modelMatrix *= transform2D::Translate(850, 250);
+
+    unordered_map<Mesh*, glm::mat3> car{
+        { meshes["carBody"], modelMatrix * transform2D::Translate(25 + distance, 25) *
+                                 transform2D::Scale(3, 1) * transform2D::Translate(-25, -25) },
+        { meshes["carWindows"], modelMatrix * transform2D::Translate(12.5 + distance, 50) *
+                                    transform2D::Translate(12.5f, 12.5f) *
+                                    transform2D::Scale(2, 1) *
+                                    transform2D::Translate(-12.5f, -12.5f) },
+        { meshes["carWheel"], modelMatrix * transform2D::Translate(-10 + distance, 0) *
+                                  transform2D::Rotate(M_PI / 4.f - (2 * distance * TO_RADIANS)) *
+                                  transform2D::Translate(-10, -10) },
+        { meshes["carWheel2"], modelMatrix * transform2D::Translate(70 + distance, 0) *
+                                   transform2D::Rotate(M_PI / 4.f - (2 * distance * TO_RADIANS)) *
+                                   transform2D::Translate(-10, -10) }
+    };
+
+    for (auto [mesh, mat] : car) {
+        RenderMesh2D(mesh, shaders["VertexColor"], mat);
+    }
 
     angularStep += deltaTimeSeconds;
 
@@ -173,6 +206,10 @@ void Lab3::FrameEnd()
 
 void Lab3::OnInputUpdate(float deltaTime, int mods)
 {
+    if (window->KeyHold(GLFW_KEY_A))
+        distance -= 100 * deltaTime;
+    if (window->KeyHold(GLFW_KEY_D))
+        distance += 100 * deltaTime;
 }
 
 void Lab3::OnKeyPress(int key, int mods)
