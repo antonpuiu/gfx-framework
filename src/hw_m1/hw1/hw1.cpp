@@ -1,12 +1,12 @@
 #include "hw_m1/hw1/hw1.h"
 
+#include "core/gpu/vertex_format.h"
+#include "hw_m1/hw1/object2D.h"
+#include "hw_m1/hw1/transform2D.h"
 #include "utils/math_utils.h"
 #include <cmath>
 #include <vector>
 #include <iostream>
-
-#include "lab_m1/lab3/transform2D.h"
-#include "lab_m1/lab3/object2D.h"
 
 using namespace std;
 using namespace m1;
@@ -33,6 +33,13 @@ void Hw1::Init()
     camera->SetRotation(glm::vec3(0, 0, 0));
     camera->Update();
     GetCameraInput()->SetActive(false);
+
+    meshes["square"] =
+        object2D::CreateObject(object2D::ObjectType::SQUARE, "square", VertexColor::RED);
+
+    meshes["star"] = object2D::CreateObject(object2D::ObjectType::STAR, "star", VertexColor::CYAN);
+    meshes["hexa"] =
+        object2D::CreateObject(object2D::ObjectType::HEXAGON, "hexa", VertexColor::PURPLE);
 }
 
 void Hw1::FrameStart()
@@ -48,6 +55,25 @@ void Hw1::FrameStart()
 
 void Hw1::Update(float deltaTimeSeconds)
 {
+    glm::mat3 modelMatrix;
+
+    modelMatrix = glm::mat3(1);
+    modelMatrix *= transform2D::Translate(150, 250);
+    modelMatrix *= transform2D::Scale(100, 100);
+
+    RenderMesh2D(meshes["square"], shaders["VertexColor"], modelMatrix);
+
+    modelMatrix = glm::mat3(1);
+    modelMatrix *= transform2D::Translate(300, 250);
+    modelMatrix *= transform2D::Scale(100, 100);
+
+    RenderMesh2D(meshes["star"], shaders["VertexColor"], modelMatrix);
+
+    modelMatrix = glm::mat3(1);
+    modelMatrix *= transform2D::Translate(500, 250);
+    modelMatrix *= transform2D::Scale(100, 100);
+
+    RenderMesh2D(meshes["hexa"], shaders["VertexColor"], modelMatrix);
 }
 
 void Hw1::FrameEnd()
