@@ -2,17 +2,25 @@
 
 #include "components/simple_scene.h"
 
-
 namespace m1
 {
-    class Lab4 : public gfxc::SimpleScene
-    {
-     public:
-        struct ViewportArea
-        {
-            ViewportArea() : x(0), y(0), width(1), height(1) {}
+    class Lab4 : public gfxc::SimpleScene {
+    public:
+        struct ViewportArea {
+            ViewportArea()
+                : x(0)
+                , y(0)
+                , width(1)
+                , height(1)
+            {
+            }
             ViewportArea(int x, int y, int width, int height)
-                : x(x), y(y), width(width), height(height) {}
+                : x(x)
+                , y(y)
+                , width(width)
+                , height(height)
+            {
+            }
             int x;
             int y;
             int width;
@@ -24,7 +32,8 @@ namespace m1
 
         void Init() override;
 
-     private:
+    private:
+        void DrawLine(glm::vec3 a, glm::vec3 b);
         void FrameStart() override;
         void Update(float deltaTimeSeconds) override;
         void FrameEnd() override;
@@ -39,13 +48,15 @@ namespace m1
         void OnWindowResize(int width, int height) override;
 
         void RenderScene();
-     protected:
+
+    protected:
         glm::mat4 modelMatrix;
+        glm::vec3 head;
+
         float translateX, translateY, translateZ;
         float scaleX, scaleY, scaleZ;
         float angularStepOX, angularStepOY, angularStepOZ;
         GLenum polygonMode;
         ViewportArea miniViewportArea;
     };
-}   // namespace m1
-
+} // namespace m1
