@@ -28,6 +28,7 @@ struct VertexFormat {
 namespace VertexColor
 {
     extern glm::vec3 BLACK;
+    extern glm::vec3 GRAY;
     extern glm::vec3 RED;
     extern glm::vec3 GREEN;
     extern glm::vec3 BLUE;
@@ -35,4 +36,5 @@ namespace VertexColor
     extern glm::vec3 PURPLE;
     extern glm::vec3 YELLOW;
     extern glm::vec3 CYAN;
+
 };

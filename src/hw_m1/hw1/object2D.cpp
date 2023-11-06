@@ -125,7 +125,6 @@ namespace object2D
             indices.push_back(vertices.size() - 1);
         }
 
-        // result->SetDrawMode(GL_LINE_LOOP);
         result->InitFromData(vertices, indices);
 
         return result;
