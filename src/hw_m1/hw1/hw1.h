@@ -1,6 +1,7 @@
 #pragma once
 
 #include "components/simple_scene.h"
+#include "components/2d/simple_object2d/simple_object2d.h"
 
 namespace m1
 {
@@ -25,7 +26,7 @@ namespace m1
         void OnMouseScroll(int mouseX, int mouseY, int offsetX, int offsetY) override;
         void OnWindowResize(int width, int height) override;
 
-    protected:
-        glm::mat3 modelMatrix;
+    private:
+        std::vector<gfxc::SimpleObject2D*> objects;
     };
 } // namespace m1

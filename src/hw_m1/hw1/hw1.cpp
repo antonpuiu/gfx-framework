@@ -1,9 +1,11 @@
 #include "hw_m1/hw1/hw1.h"
 
+#include "components/2d/simple_object2d/hexagon/hexagon.h"
 #include "core/gpu/vertex_format.h"
 #include "hw_m1/hw1/object2D.h"
-#include "hw_m1/hw1/transform2D.h"
 #include "utils/math_utils.h"
+#include "components/2d/simple_object2d/simple_objects2d.h"
+
 #include <cmath>
 #include <vector>
 #include <iostream>
@@ -34,12 +36,34 @@ void Hw1::Init()
     camera->Update();
     GetCameraInput()->SetActive(false);
 
-    meshes["square"] =
-        object2D::CreateObject(object2D::ObjectType::SQUARE, "square", VertexColor::RED);
+    // Limit and spots
+    {
+        gfxc::Square* limit = new gfxc::Square(VertexColor::RED, true);
+        limit->SetPosition({ 35, 170 });
+        limit->SetScale({ 50, 320 });
+        objects.push_back(limit);
 
-    meshes["star"] = object2D::CreateObject(object2D::ObjectType::STAR, "star", VertexColor::CYAN);
-    meshes["hexa"] =
-        object2D::CreateObject(object2D::ObjectType::HEXAGON, "hexa", VertexColor::PURPLE);
+        for (int i = 1; i <= 3; i++) {
+            for (int j = 1; j <= 3; j++) {
+                gfxc::Square* spot = new gfxc::Square(VertexColor::GREEN, true);
+                spot->SetPosition({ 110 * j + 10, 110 * i - 50 });
+                spot->SetScale({ 100, 100 });
+                objects.push_back(spot);
+            }
+        }
+    }
+
+    // objects.push_back(new gfxc::Hexagon());
+    // objects.push_back(new gfxc::Square());
+
+    // meshes["square"] =
+    //     object2D::CreateObject(object2D::ObjectType::SQUARE, "square", VertexColor::RED);
+    // meshes["star"] = object2D::CreateObject(object2D::ObjectType::STAR, "star", VertexColor::CYAN);
+    // meshes["hexa"] =
+    //     object2D::CreateObject(object2D::ObjectType::HEXAGON, "hexa", VertexColor::PURPLE);
+
+    for (auto* object : objects)
+        object->Init();
 }
 
 void Hw1::FrameStart()
@@ -55,25 +79,26 @@ void Hw1::FrameStart()
 
 void Hw1::Update(float deltaTimeSeconds)
 {
-    glm::mat3 modelMatrix;
+    for (auto* object : objects)
+        RenderMesh2D(object->GetMesh(), shaders["VertexColor"], object->GetModelMatrix());
 
-    modelMatrix = glm::mat3(1);
-    modelMatrix *= transform2D::Translate(150, 250);
-    modelMatrix *= transform2D::Scale(100, 100);
+    // modelMatrix = glm::mat3(1);
+    // modelMatrix *= transform2D::Translate(150, 250);
+    // modelMatrix *= transform2D::Scale(100, 100);
 
-    RenderMesh2D(meshes["square"], shaders["VertexColor"], modelMatrix);
+    // RenderMesh2D(meshes["square"], shaders["VertexColor"], modelMatrix);
 
-    modelMatrix = glm::mat3(1);
-    modelMatrix *= transform2D::Translate(300, 250);
-    modelMatrix *= transform2D::Scale(100, 100);
+    // modelMatrix = glm::mat3(1);
+    // modelMatrix *= transform2D::Translate(300, 250);
+    // modelMatrix *= transform2D::Scale(100, 100);
 
-    RenderMesh2D(meshes["star"], shaders["VertexColor"], modelMatrix);
+    // RenderMesh2D(meshes["star"], shaders["VertexColor"], modelMatrix);
 
-    modelMatrix = glm::mat3(1);
-    modelMatrix *= transform2D::Translate(500, 250);
-    modelMatrix *= transform2D::Scale(100, 100);
+    // modelMatrix = glm::mat3(1);
+    // modelMatrix *= transform2D::Translate(500, 250);
+    // modelMatrix *= transform2D::Scale(100, 100);
 
-    RenderMesh2D(meshes["hexa"], shaders["VertexColor"], modelMatrix);
+    // RenderMesh2D(meshes["hexa"], shaders["VertexColor"], modelMatrix);
 }
 
 void Hw1::FrameEnd()
