@@ -7,53 +7,44 @@
 using namespace std;
 using namespace m1;
 
-
 /*
  *  To find out more about `FrameStart`, `Update`, `FrameEnd`
  *  and the order in which they are called, see `world.cpp`.
  */
 
-
 Lab6::Lab6()
 {
 }
-
 
 Lab6::~Lab6()
 {
 }
 
-
 void Lab6::Init()
 {
     {
         Mesh* mesh = new Mesh("box");
-        mesh->LoadMesh(PATH_JOIN(window->props.selfDir, RESOURCE_PATH::MODELS, "primitives"), "box.obj");
+        mesh->LoadMesh(PATH_JOIN(window->props.selfDir, RESOURCE_PATH::MODELS, "primitives"),
+                       "box.obj");
         meshes[mesh->GetMeshID()] = mesh;
     }
 
     // Create a simple cube
     {
-        vector<VertexFormat> vertices
-        {
-            VertexFormat(glm::vec3(-1, -1,  1), glm::vec3(0, 1, 1), glm::vec3(0.2, 0.8, 0.2)),
-            VertexFormat(glm::vec3( 1, -1,  1), glm::vec3(1, 0, 1), glm::vec3(0.9, 0.4, 0.2)),
-            VertexFormat(glm::vec3(-1,  1,  1), glm::vec3(1, 0, 0), glm::vec3(0.7, 0.7, 0.1)),
-            VertexFormat(glm::vec3( 1,  1,  1), glm::vec3(0, 1, 0), glm::vec3(0.7, 0.3, 0.7)),
+        vector<VertexFormat> vertices{
+            VertexFormat(glm::vec3(-1, -1, 1), glm::vec3(0, 1, 1), glm::vec3(0.2, 0.8, 0.2)),
+            VertexFormat(glm::vec3(1, -1, 1), glm::vec3(1, 0, 1), glm::vec3(0.9, 0.4, 0.2)),
+            VertexFormat(glm::vec3(-1, 1, 1), glm::vec3(1, 0, 0), glm::vec3(0.7, 0.7, 0.1)),
+            VertexFormat(glm::vec3(1, 1, 1), glm::vec3(0, 1, 0), glm::vec3(0.7, 0.3, 0.7)),
             VertexFormat(glm::vec3(-1, -1, -1), glm::vec3(1, 1, 1), glm::vec3(0.3, 0.5, 0.4)),
-            VertexFormat(glm::vec3( 1, -1, -1), glm::vec3(0, 1, 1), glm::vec3(0.5, 0.2, 0.9)),
-            VertexFormat(glm::vec3(-1,  1, -1), glm::vec3(1, 1, 0), glm::vec3(0.7, 0.0, 0.7)),
-            VertexFormat(glm::vec3( 1,  1, -1), glm::vec3(0, 0, 1), glm::vec3(0.1, 0.5, 0.8)),
+            VertexFormat(glm::vec3(1, -1, -1), glm::vec3(0, 1, 1), glm::vec3(0.5, 0.2, 0.9)),
+            VertexFormat(glm::vec3(-1, 1, -1), glm::vec3(1, 1, 0), glm::vec3(0.7, 0.0, 0.7)),
+            VertexFormat(glm::vec3(1, 1, -1), glm::vec3(0, 0, 1), glm::vec3(0.1, 0.5, 0.8)),
         };
 
-        vector<unsigned int> indices =
-        {
-            0, 1, 2,        1, 3, 2,
-            2, 3, 7,        2, 7, 6,
-            1, 7, 3,        1, 5, 7,
-            6, 7, 4,        7, 5, 4,
-            0, 4, 1,        1, 4, 5,
-            2, 6, 4,        0, 2, 4,
+        vector<unsigned int> indices = {
+            0, 1, 2, 1, 3, 2, 2, 3, 7, 2, 7, 6, 1, 7, 3, 1, 5, 7,
+            6, 7, 4, 7, 5, 4, 0, 4, 1, 1, 4, 5, 2, 6, 4, 0, 2, 4,
         };
 
         CreateMesh("cube", vertices, indices);
@@ -61,16 +52,20 @@ void Lab6::Init()
 
     // Create a shader program for drawing face polygon with the color of the normal
     {
-        Shader *shader = new Shader("LabShader");
-        shader->AddShader(PATH_JOIN(window->props.selfDir, SOURCE_PATH::M1, "lab6", "shaders", "VertexShader.glsl"), GL_VERTEX_SHADER);
-        shader->AddShader(PATH_JOIN(window->props.selfDir, SOURCE_PATH::M1, "lab6", "shaders", "FragmentShader.glsl"), GL_FRAGMENT_SHADER);
+        Shader* shader = new Shader("LabShader");
+        shader->AddShader(PATH_JOIN(window->props.selfDir, SOURCE_PATH::M1, "lab6", "shaders",
+                                    "VertexShader.glsl"),
+                          GL_VERTEX_SHADER);
+        shader->AddShader(PATH_JOIN(window->props.selfDir, SOURCE_PATH::M1, "lab6", "shaders",
+                                    "FragmentShader.glsl"),
+                          GL_FRAGMENT_SHADER);
         shader->CreateAndLink();
         shaders[shader->GetName()] = shader;
     }
 }
 
-
-Mesh* Lab6::CreateMesh(const char *name, const std::vector<VertexFormat> &vertices, const std::vector<unsigned int> &indices)
+Mesh* Lab6::CreateMesh(const char* name, const std::vector<VertexFormat>& vertices,
+                       const std::vector<unsigned int>& indices)
 {
     unsigned int VAO = 0;
     // Create the VAO and bind it
@@ -83,7 +78,8 @@ Mesh* Lab6::CreateMesh(const char *name, const std::vector<VertexFormat> &vertic
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
     // Send vertices data into the VBO buffer
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices[0]) * vertices.size(), &vertices[0], GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices[0]) * vertices.size(), &vertices[0],
+                 GL_STATIC_DRAW);
 
     // Create the IBO and bind it
     unsigned int IBO;
@@ -91,7 +87,8 @@ Mesh* Lab6::CreateMesh(const char *name, const std::vector<VertexFormat> &vertic
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
 
     // Send indices data into the IBO buffer
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices[0]) * indices.size(), &indices[0], GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices[0]) * indices.size(), &indices[0],
+                 GL_STATIC_DRAW);
 
     // ========================================================================
     // This section demonstrates how the GPU vertex shader program
@@ -115,15 +112,22 @@ Mesh* Lab6::CreateMesh(const char *name, const std::vector<VertexFormat> &vertic
 
     // Set vertex normal attribute
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(VertexFormat), (void*)(sizeof(glm::vec3)));
+    // glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(VertexFormat),
+    //                       (void*)(sizeof(glm::vec3)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(VertexFormat),
+                          (void*)(2 * sizeof(glm::vec3) + sizeof(glm::vec2)));
 
     // Set texture coordinate attribute
     glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(VertexFormat), (void*)(2 * sizeof(glm::vec3)));
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(VertexFormat),
+                          (void*)(2 * sizeof(glm::vec3)));
 
     // Set vertex color attribute
     glEnableVertexAttribArray(3);
-    glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(VertexFormat), (void*)(2 * sizeof(glm::vec3) + sizeof(glm::vec2)));
+    // glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(VertexFormat),
+    //                       (void*)(2 * sizeof(glm::vec3) + sizeof(glm::vec2)));
+    glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(VertexFormat),
+                          (void*)(sizeof(glm::vec3)));
     // ========================================================================
 
     // Unbind the VAO
@@ -140,7 +144,6 @@ Mesh* Lab6::CreateMesh(const char *name, const std::vector<VertexFormat> &vertic
     return meshes[name];
 }
 
-
 void Lab6::FrameStart()
 {
     // Clears the color buffer (using the previously set color) and depth buffer
@@ -152,9 +155,10 @@ void Lab6::FrameStart()
     glViewport(0, 0, resolution.x, resolution.y);
 }
 
-
 void Lab6::Update(float deltaTimeSeconds)
 {
+    time = Engine::GetElapsedTime();
+
     {
         glm::mat4 modelMatrix = glm::mat4(1);
         modelMatrix = glm::translate(modelMatrix, glm::vec3(-2, 0.5f, 0));
@@ -179,14 +183,12 @@ void Lab6::Update(float deltaTimeSeconds)
     }
 }
 
-
 void Lab6::FrameEnd()
 {
     DrawCoordinateSystem();
 }
 
-
-void Lab6::RenderSimpleMesh(Mesh *mesh, Shader *shader, const glm::mat4 & modelMatrix)
+void Lab6::RenderSimpleMesh(Mesh* mesh, Shader* shader, const glm::mat4& modelMatrix)
 {
     if (!mesh || !shader || !shader->GetProgramID())
         return;
@@ -195,71 +197,74 @@ void Lab6::RenderSimpleMesh(Mesh *mesh, Shader *shader, const glm::mat4 & modelM
     glUseProgram(shader->program);
 
     // TODO(student): Get shader location for uniform mat4 "Model"
+    int modelLocation = glGetUniformLocation(shader->program, "Model");
 
     // TODO(student): Set shader uniform "Model" to modelMatrix
+    glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(modelMatrix));
 
     // TODO(student): Get shader location for uniform mat4 "View"
+    int viewLocation = glGetUniformLocation(shader->program, "View");
 
     // TODO(student): Set shader uniform "View" to viewMatrix
     glm::mat4 viewMatrix = GetSceneCamera()->GetViewMatrix();
+    glUniformMatrix4fv(viewLocation, 1, GL_FALSE, glm::value_ptr(viewMatrix));
 
     // TODO(student): Get shader location for uniform mat4 "Projection"
+    int projLocation = glGetUniformLocation(shader->program, "Projection");
 
     // TODO(student): Set shader uniform "Projection" to projectionMatrix
     glm::mat4 projectionMatrix = GetSceneCamera()->GetProjectionMatrix();
+    glUniformMatrix4fv(projLocation, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
+
+    // TODO(student): Get shader location for uniform variable "time"
+    int timeLocation = glGetUniformLocation(shader->program, "time");
+
+    // TODO(student): Set shader uniform "time" to time
+    glUniform1f(timeLocation, Engine::GetElapsedTime());
 
     // Draw the object
     glBindVertexArray(mesh->GetBuffers()->m_VAO);
     glDrawElements(mesh->GetDrawMode(), static_cast<int>(mesh->indices.size()), GL_UNSIGNED_INT, 0);
 }
 
-
 /*
  *  These are callback functions. To find more about callbacks and
  *  how they behave, see `input_controller.h`.
  */
-
 
 void Lab6::OnInputUpdate(float deltaTime, int mods)
 {
     // Add key press event
 }
 
-
 void Lab6::OnKeyPress(int key, int mods)
 {
     // Add key press event
 }
-
 
 void Lab6::OnKeyRelease(int key, int mods)
 {
     // Add key release event
 }
 
-
 void Lab6::OnMouseMove(int mouseX, int mouseY, int deltaX, int deltaY)
 {
     // Add mouse move event
 }
-
 
 void Lab6::OnMouseBtnPress(int mouseX, int mouseY, int button, int mods)
 {
     // Add mouse button press event
 }
 
-
 void Lab6::OnMouseBtnRelease(int mouseX, int mouseY, int button, int mods)
 {
     // Add mouse button release event
 }
 
-
 void Lab6::OnMouseScroll(int mouseX, int mouseY, int offsetX, int offsetY)
 {
 }
-
 
 void Lab6::OnWindowResize(int width, int height)
 {
