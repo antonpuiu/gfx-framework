@@ -7,48 +7,51 @@
 using namespace std;
 using namespace m1;
 
-
 /*
  *  To find out more about `FrameStart`, `Update`, `FrameEnd`
  *  and the order in which they are called, see `world.cpp`.
  */
 
-
 Lab7::Lab7()
 {
 }
-
 
 Lab7::~Lab7()
 {
 }
 
-
 void Lab7::Init()
 {
     {
         Mesh* mesh = new Mesh("box");
-        mesh->LoadMesh(PATH_JOIN(window->props.selfDir, RESOURCE_PATH::MODELS, "primitives"), "box.obj");
+        mesh->LoadMesh(PATH_JOIN(window->props.selfDir, RESOURCE_PATH::MODELS, "primitives"),
+                       "box.obj");
         meshes[mesh->GetMeshID()] = mesh;
     }
 
     {
         Mesh* mesh = new Mesh("sphere");
-        mesh->LoadMesh(PATH_JOIN(window->props.selfDir, RESOURCE_PATH::MODELS, "primitives"), "sphere.obj");
+        mesh->LoadMesh(PATH_JOIN(window->props.selfDir, RESOURCE_PATH::MODELS, "primitives"),
+                       "sphere.obj");
         meshes[mesh->GetMeshID()] = mesh;
     }
 
     {
         Mesh* mesh = new Mesh("plane");
-        mesh->LoadMesh(PATH_JOIN(window->props.selfDir, RESOURCE_PATH::MODELS, "primitives"), "plane50.obj");
+        mesh->LoadMesh(PATH_JOIN(window->props.selfDir, RESOURCE_PATH::MODELS, "primitives"),
+                       "plane50.obj");
         meshes[mesh->GetMeshID()] = mesh;
     }
 
     // Create a shader program for drawing face polygon with the color of the normal
     {
-        Shader *shader = new Shader("LabShader");
-        shader->AddShader(PATH_JOIN(window->props.selfDir, SOURCE_PATH::M1, "lab7", "shaders", "VertexShader.glsl"), GL_VERTEX_SHADER);
-        shader->AddShader(PATH_JOIN(window->props.selfDir, SOURCE_PATH::M1, "lab7", "shaders", "FragmentShader.glsl"), GL_FRAGMENT_SHADER);
+        Shader* shader = new Shader("LabShader");
+        shader->AddShader(PATH_JOIN(window->props.selfDir, SOURCE_PATH::M1, "lab7", "shaders",
+                                    "VertexShader.glsl"),
+                          GL_VERTEX_SHADER);
+        shader->AddShader(PATH_JOIN(window->props.selfDir, SOURCE_PATH::M1, "lab7", "shaders",
+                                    "FragmentShader.glsl"),
+                          GL_FRAGMENT_SHADER);
         shader->CreateAndLink();
         shaders[shader->GetName()] = shader;
     }
@@ -62,7 +65,6 @@ void Lab7::Init()
     }
 }
 
-
 void Lab7::FrameStart()
 {
     // Clears the color buffer (using the previously set color) and depth buffer
@@ -74,13 +76,12 @@ void Lab7::FrameStart()
     glViewport(0, 0, resolution.x, resolution.y);
 }
 
-
 void Lab7::Update(float deltaTimeSeconds)
 {
     {
         glm::mat4 modelMatrix = glm::mat4(1);
         modelMatrix = glm::translate(modelMatrix, glm::vec3(0, 1, 0));
-        RenderSimpleMesh(meshes["sphere"], shaders["LabShader"], modelMatrix);
+        RenderSimpleMesh(meshes["sphere"], shaders["LabShader"], modelMatrix, { 0, 0, 1 });
     }
 
     {
@@ -103,7 +104,7 @@ void Lab7::Update(float deltaTimeSeconds)
         glm::mat4 modelMatrix = glm::mat4(1);
         modelMatrix = glm::translate(modelMatrix, glm::vec3(0, 0.01f, 0));
         modelMatrix = glm::scale(modelMatrix, glm::vec3(0.25f));
-        RenderSimpleMesh(meshes["plane"], shaders["LabShader"], modelMatrix);
+        RenderSimpleMesh(meshes["plane"], shaders["LabShader"], modelMatrix, { 0.5, 0.5, 0.5 });
     }
 
     // Render the point light in the scene
@@ -115,14 +116,13 @@ void Lab7::Update(float deltaTimeSeconds)
     }
 }
 
-
 void Lab7::FrameEnd()
 {
     DrawCoordinateSystem();
 }
 
-
-void Lab7::RenderSimpleMesh(Mesh *mesh, Shader *shader, const glm::mat4 & modelMatrix, const glm::vec3 &color)
+void Lab7::RenderSimpleMesh(Mesh* mesh, Shader* shader, const glm::mat4& modelMatrix,
+                            const glm::vec3& color)
 {
     if (!mesh || !shader || !shader->GetProgramID())
         return;
@@ -132,11 +132,29 @@ void Lab7::RenderSimpleMesh(Mesh *mesh, Shader *shader, const glm::mat4 & modelM
 
     // Set shader uniforms for light & material properties
     // TODO(student): Set light position uniform
+    int lightPositionLocation = glGetUniformLocation(shader->program, "light_position");
+    glUniform3fv(lightPositionLocation, 1, glm::value_ptr(lightPosition));
 
-    glm::vec3 eyePosition = GetSceneCamera()->m_transform->GetWorldPosition();
     // TODO(student): Set eye position (camera position) uniform
+    int eyePositionLocation = glGetUniformLocation(shader->program, "eye_position");
+    glm::vec3 eyePosition = GetSceneCamera()->m_transform->GetWorldPosition();
+    glUniform3fv(eyePositionLocation, 1, glm::value_ptr(eyePosition));
 
     // TODO(student): Set material property uniforms (shininess, kd, ks, object color)
+    int materialShininessLocation = glGetUniformLocation(shader->program, "material_shininess");
+    glUniform1i(materialShininessLocation, materialShininess);
+
+    // materialKd
+    int materialKdLocation = glGetUniformLocation(shader->program, "material_kd");
+    glUniform1f(materialKdLocation, materialKd);
+
+    // materialKs
+    int materialKsLocation = glGetUniformLocation(shader->program, "material_ks");
+    glUniform1f(materialKdLocation, materialKd);
+
+    // color
+    int colorLocation = glGetUniformLocation(shader->program, "object_color");
+    glUniform3fv(colorLocation, 1, glm::value_ptr(color));
 
     // Bind model matrix
     GLint loc_model_matrix = glGetUniformLocation(shader->program, "Model");
@@ -157,69 +175,65 @@ void Lab7::RenderSimpleMesh(Mesh *mesh, Shader *shader, const glm::mat4 & modelM
     glDrawElements(mesh->GetDrawMode(), static_cast<int>(mesh->indices.size()), GL_UNSIGNED_INT, 0);
 }
 
-
 /*
  *  These are callback functions. To find more about callbacks and
  *  how they behave, see `input_controller.h`.
  */
 
-
 void Lab7::OnInputUpdate(float deltaTime, int mods)
 {
     float speed = 2;
 
-    if (!window->MouseHold(GLFW_MOUSE_BUTTON_RIGHT))
-    {
+    if (!window->MouseHold(GLFW_MOUSE_BUTTON_RIGHT)) {
         glm::vec3 up = glm::vec3(0, 1, 0);
         glm::vec3 right = GetSceneCamera()->m_transform->GetLocalOXVector();
         glm::vec3 forward = GetSceneCamera()->m_transform->GetLocalOZVector();
         forward = glm::normalize(glm::vec3(forward.x, 0, forward.z));
 
         // Control light position using on W, A, S, D, E, Q
-        if (window->KeyHold(GLFW_KEY_W)) lightPosition -= forward * deltaTime * speed;
-        if (window->KeyHold(GLFW_KEY_A)) lightPosition -= right * deltaTime * speed;
-        if (window->KeyHold(GLFW_KEY_S)) lightPosition += forward * deltaTime * speed;
-        if (window->KeyHold(GLFW_KEY_D)) lightPosition += right * deltaTime * speed;
-        if (window->KeyHold(GLFW_KEY_E)) lightPosition += up * deltaTime * speed;
-        if (window->KeyHold(GLFW_KEY_Q)) lightPosition -= up * deltaTime * speed;
+        if (window->KeyHold(GLFW_KEY_W))
+            lightPosition -= forward * deltaTime * speed;
+        if (window->KeyHold(GLFW_KEY_A))
+            lightPosition -= right * deltaTime * speed;
+        if (window->KeyHold(GLFW_KEY_S))
+            lightPosition += forward * deltaTime * speed;
+        if (window->KeyHold(GLFW_KEY_D))
+            lightPosition += right * deltaTime * speed;
+        if (window->KeyHold(GLFW_KEY_E))
+            lightPosition += up * deltaTime * speed;
+        if (window->KeyHold(GLFW_KEY_Q))
+            lightPosition -= up * deltaTime * speed;
     }
 }
-
 
 void Lab7::OnKeyPress(int key, int mods)
 {
     // Add key press event
 }
 
-
 void Lab7::OnKeyRelease(int key, int mods)
 {
     // Add key release event
 }
-
 
 void Lab7::OnMouseMove(int mouseX, int mouseY, int deltaX, int deltaY)
 {
     // Add mouse move event
 }
 
-
 void Lab7::OnMouseBtnPress(int mouseX, int mouseY, int button, int mods)
 {
     // Add mouse button press event
 }
-
 
 void Lab7::OnMouseBtnRelease(int mouseX, int mouseY, int button, int mods)
 {
     // Add mouse button release event
 }
 
-
 void Lab7::OnMouseScroll(int mouseX, int mouseY, int offsetX, int offsetY)
 {
 }
-
 
 void Lab7::OnWindowResize(int width, int height)
 {
