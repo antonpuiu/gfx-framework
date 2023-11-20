@@ -2,8 +2,9 @@
 
 #include "core/gpu/vertex_format.h"
 #include "components/simple_scene.h"
+#include "hw_m1/hw1/2d/render_object2d/render_object2d.h"
 
-using namespace gfxc;
+using namespace m1;
 
 Square::Square()
     : Square(VertexColor::WHITE, true)
@@ -11,8 +12,14 @@ Square::Square()
 }
 
 Square::Square(glm::vec3 color, bool fill)
-    : color(color)
+    : RenderObject2D(color)
     , fill(fill)
+{
+}
+
+Square::Square(Square& square)
+    : RenderObject2D(square)
+    , fill(square.fill)
 {
 }
 
@@ -20,13 +27,31 @@ Square::~Square()
 {
 }
 
+Square* Square::Create()
+{
+    return new Square();
+}
+
+Square* Square::Clone()
+{
+    return new Square(*this);
+}
+
+void Square::SetFill(bool fill)
+{
+    this->fill = fill;
+
+    if (mesh != nullptr)
+        Init();
+}
+
 void Square::Init()
 {
     std::string name = "square" + std::to_string(color.x) + std::to_string(color.y) +
                        std::to_string(color.z) + std::to_string(fill);
 
-    if (SimpleScene::meshes.find(name) != SimpleScene::meshes.end()) {
-        mesh = SimpleScene::meshes.at(name);
+    if (gfxc::SimpleScene::meshes.find(name) != gfxc::SimpleScene::meshes.end()) {
+        mesh = gfxc::SimpleScene::meshes.at(name);
         return;
     }
 
@@ -55,5 +80,5 @@ void Square::Init()
         mesh->InitFromData(vertices, indices);
     }
 
-    SimpleScene::meshes[name] = mesh;
+    gfxc::SimpleScene::meshes[name] = mesh;
 }

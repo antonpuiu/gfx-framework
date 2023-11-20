@@ -10,5 +10,6 @@ namespace VertexColor
     glm::vec3 WHITE = glm::vec3(1, 1, 1);
     glm::vec3 PURPLE = glm::vec3(1, 0, 1);
     glm::vec3 YELLOW = glm::vec3(1, 1, 0);
+    glm::vec3 ORANGE = glm::vec3(1, 0.5f, 0);
     glm::vec3 CYAN = glm::vec3(0, 1, 1);
 };

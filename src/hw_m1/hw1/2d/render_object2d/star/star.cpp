@@ -2,16 +2,17 @@
 
 #include "core/gpu/vertex_format.h"
 #include "components/simple_scene.h"
+#include "hw_m1/hw1/2d/render_object2d/render_object2d.h"
 
-using namespace gfxc;
+using namespace m1;
 
 Star::Star()
-    : Star(VertexColor::WHITE)
+    : RenderObject2D()
 {
 }
 
 Star::Star(glm::vec3 color)
-    : color(color)
+    : RenderObject2D(color)
 {
 }
 
@@ -19,13 +20,23 @@ Star::~Star()
 {
 }
 
+Star* Star::Create()
+{
+    return new Star();
+}
+
+Star* Star::Clone()
+{
+    return new Star(*this);
+}
+
 void Star::Init()
 {
     std::string name =
         "star" + std::to_string(color.x) + std::to_string(color.y) + std::to_string(color.z);
 
-    if (SimpleScene::meshes.find(name) != SimpleScene::meshes.end()) {
-        mesh = SimpleScene::meshes.at(name);
+    if (gfxc::SimpleScene::meshes.find(name) != gfxc::SimpleScene::meshes.end()) {
+        mesh = gfxc::SimpleScene::meshes.at(name);
         return;
     }
 
@@ -34,7 +45,7 @@ void Star::Init()
     std::vector<VertexFormat> vertices;
 
     int sides = 5;
-    float radius = .25f;
+    float radius = .125f;
 
     for (int i = 0; i < sides; i++) {
         float angle = M_PI * 2.0f / sides * i - M_PI / 2;
@@ -95,5 +106,5 @@ void Star::Init()
 
     mesh->InitFromData(vertices, indices);
 
-    SimpleScene::meshes[name] = mesh;
+    gfxc::SimpleScene::meshes[name] = mesh;
 }

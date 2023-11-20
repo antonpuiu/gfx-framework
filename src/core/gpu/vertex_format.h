@@ -35,5 +35,6 @@ namespace VertexColor
     extern glm::vec3 WHITE;
     extern glm::vec3 PURPLE;
     extern glm::vec3 YELLOW;
+    extern glm::vec3 ORANGE;
     extern glm::vec3 CYAN;
 };

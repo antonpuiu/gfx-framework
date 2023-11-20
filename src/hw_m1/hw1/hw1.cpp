@@ -1,14 +1,19 @@
 #include "hw_m1/hw1/hw1.h"
 
-#include "components/2d/simple_object2d/hexagon/hexagon.h"
+#include "GLFW/glfw3.h"
 #include "core/gpu/vertex_format.h"
-#include "hw_m1/hw1/object2D.h"
+#include "hw_m1/hw1/2d/render_object2d/render_object2d.h"
+#include "hw_m1/hw1/2d/render_object2d/square/square.h"
+#include "hw_m1/hw1/2d/scene_object2d/scene_object2d.h"
 #include "utils/math_utils.h"
-#include "components/2d/simple_object2d/simple_objects2d.h"
+#include "hw_m1/hw1/2d/render_object2d/render_objects2d.h"
+
+#include "hw_m1/hw1/2d/object2d.h"
 
 #include <cmath>
 #include <vector>
 #include <iostream>
+#include <random>
 
 using namespace std;
 using namespace m1;
@@ -28,42 +33,124 @@ Hw1::~Hw1()
 
 void Hw1::Init()
 {
-    glm::ivec2 resolution = window->GetResolution();
-    auto camera = GetSceneCamera();
-    camera->SetOrthographic(0, (float)resolution.x, 0, (float)resolution.y, 0.01f, 400);
-    camera->SetPosition(glm::vec3(0, 0, 50));
-    camera->SetRotation(glm::vec3(0, 0, 0));
-    camera->Update();
-    GetCameraInput()->SetActive(false);
-
-    // Limit and spots
     {
-        gfxc::Square* limit = new gfxc::Square(VertexColor::RED, true);
+        // Camera Setup
+        glm::ivec2 resolution = window->GetResolution();
+        auto camera = GetSceneCamera();
+        camera->SetOrthographic(0, (float)resolution.x, 0, (float)resolution.y, 0.01f, 400);
+        camera->SetPosition(glm::vec3(0, 0, 50));
+        camera->SetRotation(glm::vec3(0, 0, 0));
+        camera->Update();
+        GetCameraInput()->SetActive(false);
+    }
+
+    {
+        // Limit and spots
+        limit = new Limit();
         limit->SetPosition({ 35, 170 });
         limit->SetScale({ 50, 320 });
         objects.push_back(limit);
 
         for (int i = 1; i <= 3; i++) {
             for (int j = 1; j <= 3; j++) {
-                gfxc::Square* spot = new gfxc::Square(VertexColor::GREEN, true);
-                spot->SetPosition({ 110 * j + 10, 110 * i - 50 });
+                Spot* spot = new Spot();
+
+                spot->SetPosition({ 110 * i + 10, 110 * j - 50 });
                 spot->SetScale({ 100, 100 });
+
                 objects.push_back(spot);
+                spots.push_back(spot);
             }
         }
     }
 
-    // objects.push_back(new gfxc::Hexagon());
-    // objects.push_back(new gfxc::Square());
+    {
+        // Generators and and Enemies [ one of each kind ]
+        std::unordered_map<glm::vec3, int> colors{ { VertexColor::PURPLE, 3 },
+                                                   { VertexColor::YELLOW, 2 },
+                                                   { VertexColor::BLUE, 2 },
+                                                   { VertexColor::ORANGE, 1 } };
 
-    // meshes["square"] =
-    //     object2D::CreateObject(object2D::ObjectType::SQUARE, "square", VertexColor::RED);
-    // meshes["star"] = object2D::CreateObject(object2D::ObjectType::STAR, "star", VertexColor::CYAN);
-    // meshes["hexa"] =
-    //     object2D::CreateObject(object2D::ObjectType::HEXAGON, "hexa", VertexColor::PURPLE);
+        std::vector<float> heights;
+        int current = 1;
+
+        for (auto* spot : spots) {
+            float y = spot->GetPosition().y;
+
+            bool found = false;
+
+            for (float height : heights) {
+                if (height == y) {
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found)
+                heights.push_back(y);
+        }
+
+        for (auto [color, cnt] : colors) {
+            Enemy* enemy = new Enemy(color);
+
+            enemy->SetScale({ 80, 80 });
+            // enemy->SetPosition({ 1280 + (current * 100), heights[current % heights.size()] });
+            enemy->SetPosition({ 800 + (current * 100), heights[current % heights.size()] });
+
+            objects.push_front(enemy);
+            enemies.push_back(enemy);
+
+            current++;
+        }
+
+        current = 1;
+
+        for (auto [color, cnt] : colors) {
+            Generator* generator = new Generator(color, cnt);
+
+            generator->SetScale({ 100, 100 });
+            generator->SetPosition({ -30 + (current * 110), 650 });
+
+            objects.push_front(generator);
+            generators.push_back(generator);
+
+            current++;
+        }
+    }
+
+    {
+        // Lifes & Power
+        for (int i = 1; i <= 3; i++) {
+            Life* life = new Life();
+            life->SetPosition({ 850 + (110 * i), 650 });
+            life->SetScale({ 100, 100 });
+            objects.push_back(life);
+            lifes.push_back(life);
+        }
+
+        for (int i = 1; i <= 13; i++) {
+            Energy* energy = new Energy();
+            energy->SetPosition({ 895 + (25 * i), 580 });
+            energy->SetScale({ 20, 20 });
+            objects.push_back(energy);
+            currentEnergy.push_back(energy);
+        }
+
+        for (int i = 1; i <= 4; i++) {
+            Energy* energy = new Energy(VertexColor::PURPLE);
+
+            energy->enabled = false;
+            energy->SetScale({ 60, 60 });
+
+            objects.push_front(energy);
+            newEnergy.push_back(energy);
+        }
+    }
 
     for (auto* object : objects)
         object->Init();
+
+    EnableNewEnergy(3);
 }
 
 void Hw1::FrameStart()
@@ -79,30 +166,64 @@ void Hw1::FrameStart()
 
 void Hw1::Update(float deltaTimeSeconds)
 {
-    for (auto* object : objects)
-        RenderMesh2D(object->GetMesh(), shaders["VertexColor"], object->GetModelMatrix());
+    for (auto enemy : enemies) {
+        if (!enemy->enabled)
+            continue;
 
-    // modelMatrix = glm::mat3(1);
-    // modelMatrix *= transform2D::Translate(150, 250);
-    // modelMatrix *= transform2D::Scale(100, 100);
+        switch (enemy->state) {
+        case ACTIVE:
+            enemy->AddPosition({ -300 * deltaTimeSeconds, 0 });
+            enemy->AddRotation(90 * deltaTimeSeconds * TO_RADIANS);
+            break;
+        case HIT:
+            enemy->AddScale({ -300 * deltaTimeSeconds, -300 * deltaTimeSeconds });
+            break;
+        case DISABLED:
+            break;
+        }
+    }
 
-    // RenderMesh2D(meshes["square"], shaders["VertexColor"], modelMatrix);
+    for (auto* object : objects) {
+        if (!object->enabled)
+            continue;
 
-    // modelMatrix = glm::mat3(1);
-    // modelMatrix *= transform2D::Translate(300, 250);
-    // modelMatrix *= transform2D::Scale(100, 100);
-
-    // RenderMesh2D(meshes["star"], shaders["VertexColor"], modelMatrix);
-
-    // modelMatrix = glm::mat3(1);
-    // modelMatrix *= transform2D::Translate(500, 250);
-    // modelMatrix *= transform2D::Scale(100, 100);
-
-    // RenderMesh2D(meshes["hexa"], shaders["VertexColor"], modelMatrix);
+        for (auto [mesh, modelMatrix] : object->GetRenderDetails())
+            RenderMesh2D(mesh, shaders["VertexColor"], modelMatrix);
+    }
 }
 
 void Hw1::FrameEnd()
 {
+    for (auto enemy : enemies) {
+        if (enemy->GetPosition().x <= limit->GetPosition().x) {
+            enemy->state = HIT;
+        }
+
+        if (enemy->GetScale().x < 50 || enemy->GetScale().y < 50) {
+            enemy->state = DISABLED;
+            enemy->enabled = false;
+        }
+    }
+
+    // int disabled = 0;
+
+    // for (auto* enemy : enemies)
+    //     if (!enemy->enabled)
+    //         disabled++;
+
+    // if (disabled == enemies.size()) {
+    //     EnableNewEnergy(3);
+    //     EnableEnemies(3);
+    // }
+
+    int count = 0;
+
+    for (auto energy : newEnergy)
+        if (energy->enabled)
+            count++;
+
+    if (count == 0)
+        EnableNewEnergy(3);
 }
 
 /*
@@ -126,17 +247,100 @@ void Hw1::OnKeyRelease(int key, int mods)
 
 void Hw1::OnMouseMove(int mouseX, int mouseY, int deltaX, int deltaY)
 {
-    // Add mouse move event
+    mouseY = abs(window->GetResolution().y - mouseY);
+
+    if (window->MouseHold(GLFW_MOUSE_BUTTON_LEFT) && launcher != nullptr)
+        launcher->SetPosition({ mouseX, mouseY });
 }
 
 void Hw1::OnMouseBtnPress(int mouseX, int mouseY, int button, int mods)
 {
-    // Add mouse button press event
+    mouseY = abs(window->GetResolution().y - mouseY);
+
+    if (button == 1) {
+        for (auto* energy : newEnergy) {
+            if (!energy->enabled)
+                continue;
+
+            auto pos = energy->GetPosition();
+            auto scl = energy->GetScale();
+
+            if ((pos.x - scl.x / 2 <= mouseX && mouseX <= pos.x + scl.x / 2) &&
+                (pos.y - scl.y / 2 <= mouseY && mouseY <= pos.y + scl.y / 2))
+                energy->enabled = false;
+        }
+    }
+
+    if (button == 1) {
+        for (auto generator : generators) {
+            auto pos = generator->GetPosition();
+            auto scl = generator->GetScale();
+
+            if ((pos.x - scl.x / 2 <= mouseX && mouseX <= pos.x + scl.x / 2) &&
+                (pos.y - scl.y / 2 <= mouseY && mouseY <= pos.y + scl.y / 2) &&
+                generator->GetCost() <= GetCurrentEnergyLevel()) {
+                launcher = generator->Generate();
+                launcher->DetatchFromParent();
+
+                objects.push_front(launcher);
+
+                int cost = generator->GetCost();
+
+                for (int i = currentEnergy.size() - 1; i >= 0; i--) {
+                    if (cost == 0)
+                        break;
+
+                    if (!currentEnergy[i]->enabled)
+                        continue;
+
+                    currentEnergy[i]->enabled = false;
+                    cost--;
+                }
+
+                break;
+            }
+        }
+    }
 }
 
 void Hw1::OnMouseBtnRelease(int mouseX, int mouseY, int button, int mods)
 {
-    // Add mouse button release event
+    mouseY = abs(window->GetResolution().y - mouseY);
+
+    for (auto spot : spots) {
+        auto pos = spot->GetPosition();
+        auto scl = spot->GetScale();
+
+        if ((pos.x - scl.x / 2 <= mouseX && mouseX <= pos.x + scl.x / 2) &&
+            (pos.y - scl.y / 2 <= mouseY && mouseY <= pos.y + scl.y / 2)) {
+            if (launcher != nullptr && button == 1) {
+                spot->Attatch(launcher);
+                launcher->AttatchToParent(spot);
+                launcher = nullptr;
+                return;
+            }
+
+            if (button == 2)
+                spot->Detatch();
+        }
+    }
+
+    if (launcher != nullptr) {
+        for (auto spot : spots) {
+            auto pos = spot->GetPosition();
+            auto scl = spot->GetScale();
+
+            if ((pos.x - scl.x / 2 <= mouseX && mouseX <= pos.x + scl.x / 2) &&
+                (pos.y - scl.y / 2 <= mouseY && mouseY <= pos.y + scl.y / 2)) {
+                spot->Attatch(launcher);
+                launcher->AttatchToParent(spot);
+                launcher = nullptr;
+                return;
+            }
+        }
+
+        launcher->AttatchToParent();
+    }
 }
 
 void Hw1::OnMouseScroll(int mouseX, int mouseY, int offsetX, int offsetY)
@@ -145,4 +349,43 @@ void Hw1::OnMouseScroll(int mouseX, int mouseY, int offsetX, int offsetY)
 
 void Hw1::OnWindowResize(int width, int height)
 {
+}
+
+void Hw1::EnableNewEnergy(int count)
+{
+    std::random_device rd;
+    std::default_random_engine engine(rd());
+    glm::ivec2 resolution = window->GetResolution();
+    std::uniform_int_distribution<int> x(60, resolution.x), y(60, resolution.y);
+
+    for (int i = 0; i < count; i++) {
+        if (i == newEnergy.size())
+            break;
+
+        newEnergy[i]->enabled = true;
+        newEnergy[i]->SetPosition({ x(engine), y(engine) });
+    }
+}
+
+void Hw1::EnableEnemies(int count)
+{
+    for (int i = 0; i < count; i++) {
+        if (i == enemies.size())
+            break;
+
+        enemies[i]->Reset();
+        enemies[i]->SetPosition({ 1280 + (i * 100), enemies[i]->GetPosition().y });
+        enemies[i]->SetScale({ 80, 80 });
+    }
+}
+
+int Hw1::GetCurrentEnergyLevel()
+{
+    int result = 0;
+
+    for (auto energy : currentEnergy)
+        if (energy->enabled)
+            result++;
+
+    return result;
 }

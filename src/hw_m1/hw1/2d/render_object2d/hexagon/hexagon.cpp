@@ -3,15 +3,15 @@
 #include "core/gpu/vertex_format.h"
 #include "components/simple_scene.h"
 
-using namespace gfxc;
+using namespace m1;
 
 Hexagon::Hexagon()
-    : Hexagon(VertexColor::WHITE)
+    : RenderObject2D()
 {
 }
 
 Hexagon::Hexagon(glm::vec3 color)
-    : color(color)
+    : RenderObject2D(color)
 {
 }
 
@@ -19,13 +19,23 @@ Hexagon::~Hexagon()
 {
 }
 
+Hexagon* Hexagon::Create()
+{
+    return new Hexagon();
+}
+
+Hexagon* Hexagon::Clone()
+{
+    return new Hexagon(*this);
+}
+
 void Hexagon::Init()
 {
     std::string name =
         "hexagon" + std::to_string(color.x) + std::to_string(color.y) + std::to_string(color.z);
 
-    if (SimpleScene::meshes.find(name) != SimpleScene::meshes.end()) {
-        mesh = SimpleScene::meshes.at(name);
+    if (gfxc::SimpleScene::meshes.find(name) != gfxc::SimpleScene::meshes.end()) {
+        mesh = gfxc::SimpleScene::meshes.at(name);
         return;
     }
 
@@ -53,5 +63,5 @@ void Hexagon::Init()
 
     mesh->InitFromData(vertices, indices);
 
-    SimpleScene::meshes[name] = mesh;
+    gfxc::SimpleScene::meshes[name] = mesh;
 }

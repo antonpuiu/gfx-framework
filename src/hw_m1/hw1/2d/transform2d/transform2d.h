@@ -4,12 +4,13 @@
 
 #include <vector>
 
-namespace gfxc
+namespace m1
 {
     class Transform2D {
     public:
         Transform2D();
         Transform2D(Transform2D* parent);
+        Transform2D(Transform2D&);
 
         glm::mat3 GetModelMatrix();
         void ComputeModelMatrix();
@@ -28,6 +29,10 @@ namespace gfxc
 
         void AddChildren(Transform2D* children);
 
+        void AttatchToParent();
+        void AttatchToParent(Transform2D* parent);
+        void DetatchFromParent();
+
     protected:
         std::vector<Transform2D*> childrens;
         Transform2D* parent;
@@ -38,6 +43,11 @@ namespace gfxc
         glm::vec2 pos;
         float rotation;
 
+        glm::vec2 scaleDetatched;
+        glm::vec2 posDetatched;
+        float rotationDetatched;
+
         bool dirtyFlag;
+        bool detatched;
     };
 }
