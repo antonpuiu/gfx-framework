@@ -45,7 +45,7 @@ void Star::Init()
     std::vector<VertexFormat> vertices;
 
     int sides = 5;
-    float radius = .125f;
+    float radius = .25f;
 
     for (int i = 0; i < sides; i++) {
         float angle = M_PI * 2.0f / sides * i - M_PI / 2;
@@ -78,7 +78,7 @@ void Star::Init()
         float x_p = 0.0, y_p;
 
         float a, b, c;
-        float height = .25f;
+        float height = .35f;
 
         a = 1.f + 1.f / (slope * slope);
         b = (-2.f * x - (2.f / slope) * (x / slope + y) + 2.f * y / slope);

@@ -24,6 +24,11 @@ using namespace m1;
  */
 
 Hw1::Hw1()
+    : generateEnergy(0.0)
+    , intervalEnergy(5.0)
+    , generateEnemy(0.0)
+    , intervalEnemy(0.0)
+    , launcher(nullptr)
 {
 }
 
@@ -90,19 +95,6 @@ void Hw1::Init()
                 heights.push_back(y);
         }
 
-        for (auto [color, cnt] : colors) {
-            Enemy* enemy = new Enemy(color);
-
-            enemy->SetScale({ 80, 80 });
-            // enemy->SetPosition({ 1280 + (current * 100), heights[current % heights.size()] });
-            enemy->SetPosition({ 800 + (current * 100), heights[current % heights.size()] });
-
-            objects.push_front(enemy);
-            enemies.push_back(enemy);
-
-            current++;
-        }
-
         current = 1;
 
         for (auto [color, cnt] : colors) {
@@ -135,95 +127,227 @@ void Hw1::Init()
             objects.push_back(energy);
             currentEnergy.push_back(energy);
         }
-
-        for (int i = 1; i <= 4; i++) {
-            Energy* energy = new Energy(VertexColor::PURPLE);
-
-            energy->enabled = false;
-            energy->SetScale({ 60, 60 });
-
-            objects.push_front(energy);
-            newEnergy.push_back(energy);
-        }
     }
 
     for (auto* object : objects)
         object->Init();
-
-    EnableNewEnergy(3);
 }
 
 void Hw1::FrameStart()
 {
-    // Clears the color buffer (using the previously set color) and depth buffer
-    glClearColor(0, 0, 0, 1);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    {
+        // Clears the color buffer (using the previously set color) and depth buffer
+        glClearColor(0, 0, 0, 1);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glm::ivec2 resolution = window->GetResolution();
-    // Sets the screen area where to draw
-    glViewport(0, 0, resolution.x, resolution.y);
+        glm::ivec2 resolution = window->GetResolution();
+        // Sets the screen area where to draw
+        glViewport(0, 0, resolution.x, resolution.y);
+    }
+
+    {
+        int lifesCount = 0;
+
+        for (int i = 0; i < lifes.size(); i++) {
+            if (!lifes[i]->enabled)
+                break;
+
+            lifesCount++;
+        }
+
+        if (lifesCount == 0) {
+            cout << "GAME OVER!" << endl;
+            window->Close();
+        }
+    }
 }
 
 void Hw1::Update(float deltaTimeSeconds)
 {
-    for (auto enemy : enemies) {
-        if (!enemy->enabled)
-            continue;
+    UpdateEnemies(deltaTimeSeconds);
+    UpdateProjectiles(deltaTimeSeconds);
+    UpdateSpots(deltaTimeSeconds);
+    UpdateObjects(deltaTimeSeconds);
 
-        switch (enemy->state) {
-        case ACTIVE:
-            enemy->AddPosition({ -300 * deltaTimeSeconds, 0 });
-            enemy->AddRotation(90 * deltaTimeSeconds * TO_RADIANS);
-            break;
-        case HIT:
-            enemy->AddScale({ -300 * deltaTimeSeconds, -300 * deltaTimeSeconds });
-            break;
-        case DISABLED:
-            break;
-        }
-    }
-
-    for (auto* object : objects) {
-        if (!object->enabled)
-            continue;
-
-        for (auto [mesh, modelMatrix] : object->GetRenderDetails())
-            RenderMesh2D(mesh, shaders["VertexColor"], modelMatrix);
-    }
+    generateEnergy += deltaTimeSeconds;
+    generateEnemy += deltaTimeSeconds;
 }
 
 void Hw1::FrameEnd()
 {
-    for (auto enemy : enemies) {
-        if (enemy->GetPosition().x <= limit->GetPosition().x) {
-            enemy->state = HIT;
-        }
+    {
+        for (auto spot : spots) {
+            Launcher* l = spot->GetLauncher();
 
-        if (enemy->GetScale().x < 50 || enemy->GetScale().y < 50) {
-            enemy->state = DISABLED;
-            enemy->enabled = false;
+            if (l == nullptr)
+                continue;
+
+            if (l->GetScale().x < 0.4 && l->GetScale().y < 0.4) {
+                l->state = DISABLED;
+                continue;
+            }
+
+            for (auto enemy : enemies) {
+                if (enemy->GetColor() == l->GetColor() &&
+                    enemy->GetPosition().y == spot->GetPosition().y &&
+                    (spot->GetPosition().x + l->GetScale().x) -
+                            (enemy->GetPosition().x - enemy->GetScale().x) >=
+                        0) {
+                    l->state = HIT;
+                    break;
+                }
+            }
         }
     }
 
-    // int disabled = 0;
+    {
+        for (auto it = projectiles.begin(); it != projectiles.end();) {
+            Projectile* projectile = *it;
+            glm::vec2 p_pos = projectile->GetPosition(), p_scl = projectile->GetScale();
+            bool inc = true;
 
-    // for (auto* enemy : enemies)
-    //     if (!enemy->enabled)
-    //         disabled++;
+            switch (projectile->state) {
+            case ACTIVE:
+                for (auto enemy : enemies) {
+                    glm::vec2 e_pos = enemy->GetPosition(), e_scl = enemy->GetScale();
 
-    // if (disabled == enemies.size()) {
-    //     EnableNewEnergy(3);
-    //     EnableEnemies(3);
-    // }
+                    if (projectile->GetColor() == enemy->GetColor() && p_pos.y == e_pos.y &&
+                        (p_pos.x + p_scl.x) - (e_pos.x - e_scl.x) >= 0) {
+                        projectile->state = HIT;
+                        enemy->life--;
+                    }
+                }
+                break;
+            case HIT:
+                if (p_scl.x <= 0.4 && p_scl.y <= 0.4)
+                    projectile->state = DISABLED;
 
-    int count = 0;
+                break;
+            case DISABLED:
+                for (auto it_obj = objects.begin(); it_obj != objects.end(); it_obj++) {
+                    Object2D* obj = *it_obj;
 
-    for (auto energy : newEnergy)
-        if (energy->enabled)
-            count++;
+                    if (obj == projectile) {
+                        objects.erase(it_obj);
+                        it = projectiles.erase(it);
+                        inc = false;
+                        break;
+                    }
+                }
+                break;
+            }
 
-    if (count == 0)
-        EnableNewEnergy(3);
+            if (inc)
+                it++;
+        }
+    }
+
+    {
+        for (auto it = enemies.begin(); it != enemies.end();) {
+            Enemy* enemy = *it;
+            bool inc = true;
+
+            switch (enemy->state) {
+            case ACTIVE:
+                if (enemy->life <= 0)
+                    enemy->state = HIT;
+
+                if (enemy->GetPosition().x <= limit->GetPosition().x) {
+                    enemy->state = HIT;
+
+                    for (int i = lifes.size() - 1; i >= 0; i--) {
+                        if (!lifes[i]->enabled)
+                            continue;
+
+                        lifes[i]->enabled = false;
+                        break;
+                    }
+                }
+                break;
+            case HIT:
+                if (enemy->GetScale().x < 50 || enemy->GetScale().y < 50) {
+                    enemy->state = DISABLED;
+                    enemy->enabled = false;
+                }
+                break;
+            case DISABLED:
+                for (auto it_obj = objects.begin(); it_obj != objects.end(); it_obj++) {
+                    Object2D* obj = *it_obj;
+
+                    if (obj == enemy) {
+                        objects.erase(it_obj);
+                        enemies.erase(it);
+                        inc = false;
+                        break;
+                    }
+                }
+                break;
+            }
+
+            if (inc)
+                it++;
+        }
+    }
+
+    {
+        glm::ivec2 resolution = window->GetResolution();
+
+        for (auto it_proj = projectiles.begin(); it_proj != projectiles.end();) {
+            Projectile* projectile = *it_proj;
+            bool inc = true;
+
+            if (!projectile->enabled || projectile->GetPosition().x > resolution.x) {
+                for (auto it = objects.begin(); it != objects.end(); it++) {
+                    Object2D* object = *it;
+
+                    if (object == projectile) {
+                        it = objects.erase(it);
+                        it_proj = projectiles.erase(it_proj);
+                        inc = false;
+                    }
+                }
+            }
+
+            if (inc)
+                it_proj++;
+        }
+    }
+
+    {
+        for (auto spot : spots) {
+            Launcher* l = spot->GetLauncher();
+
+            if (l != nullptr && !l->enabled)
+                spot->Detatch();
+        }
+    }
+
+    {
+        if (generateEnergy >= intervalEnergy && newEnergy.size() == 0) {
+            std::random_device rd;
+            std::default_random_engine engine(rd());
+            std::uniform_real_distribution<float> x(1, 5), y(1, 5);
+
+            generateEnergy = 0.0;
+            intervalEnergy = x(engine);
+
+            EnableNewEnergy(y(engine));
+        }
+    }
+
+    {
+        if (generateEnemy >= intervalEnemy) {
+            std::random_device rd;
+            std::default_random_engine engine(rd());
+            std::uniform_real_distribution<float> x(1, 10);
+            std::uniform_int_distribution<int> y(1, 2);
+
+            generateEnemy = 0.0;
+            intervalEnemy = x(engine);
+
+            EnableEnemies(y(engine));
+        }
+    }
 }
 
 /*
@@ -237,7 +361,6 @@ void Hw1::OnInputUpdate(float deltaTime, int mods)
 
 void Hw1::OnKeyPress(int key, int mods)
 {
-    // Add key press event
 }
 
 void Hw1::OnKeyRelease(int key, int mods)
@@ -249,55 +372,91 @@ void Hw1::OnMouseMove(int mouseX, int mouseY, int deltaX, int deltaY)
 {
     mouseY = abs(window->GetResolution().y - mouseY);
 
-    if (window->MouseHold(GLFW_MOUSE_BUTTON_LEFT) && launcher != nullptr)
-        launcher->SetPosition({ mouseX, mouseY });
+    {
+        if (window->MouseHold(GLFW_MOUSE_BUTTON_LEFT) && launcher != nullptr)
+            launcher->SetPosition({ mouseX, mouseY });
+    }
 }
 
 void Hw1::OnMouseBtnPress(int mouseX, int mouseY, int button, int mods)
 {
     mouseY = abs(window->GetResolution().y - mouseY);
 
-    if (button == 1) {
-        for (auto* energy : newEnergy) {
-            if (!energy->enabled)
-                continue;
+    {
+        if (button == 1) {
+            for (auto it = newEnergy.begin(); it != newEnergy.end();) {
+                Energy* energy = *it;
+                bool inc = true;
 
-            auto pos = energy->GetPosition();
-            auto scl = energy->GetScale();
+                auto pos = energy->GetPosition();
+                auto scl = energy->GetScale();
 
-            if ((pos.x - scl.x / 2 <= mouseX && mouseX <= pos.x + scl.x / 2) &&
-                (pos.y - scl.y / 2 <= mouseY && mouseY <= pos.y + scl.y / 2))
-                energy->enabled = false;
+                if ((pos.x - scl.x / 2 <= mouseX && mouseX <= pos.x + scl.x / 2) &&
+                    (pos.y - scl.y / 2 <= mouseY && mouseY <= pos.y + scl.y / 2)) {
+                    energy->enabled = false;
+                    for (auto* crtEnergy : currentEnergy)
+                        if (!crtEnergy->enabled) {
+                            crtEnergy->enabled = true;
+                            break;
+                        }
+
+                    for (auto it_obj = objects.begin(); it_obj != objects.end(); it_obj++) {
+                        Object2D* obj = *it_obj;
+
+                        if (obj == energy) {
+                            it = newEnergy.erase(it);
+                            objects.erase(it_obj);
+                            inc = false;
+                            break;
+                        }
+                    }
+                }
+
+                if (inc)
+                    it++;
+            }
         }
     }
 
-    if (button == 1) {
-        for (auto generator : generators) {
-            auto pos = generator->GetPosition();
-            auto scl = generator->GetScale();
+    {
+        if (button == 1) {
+            for (auto generator : generators) {
+                auto pos = generator->GetPosition();
+                auto scl = generator->GetScale();
 
-            if ((pos.x - scl.x / 2 <= mouseX && mouseX <= pos.x + scl.x / 2) &&
-                (pos.y - scl.y / 2 <= mouseY && mouseY <= pos.y + scl.y / 2) &&
-                generator->GetCost() <= GetCurrentEnergyLevel()) {
-                launcher = generator->Generate();
-                launcher->DetatchFromParent();
+                if ((pos.x - scl.x / 2 <= mouseX && mouseX <= pos.x + scl.x / 2) &&
+                    (pos.y - scl.y / 2 <= mouseY && mouseY <= pos.y + scl.y / 2) &&
+                    generator->GetCost() <= GetCurrentEnergyLevel()) {
+                    launcher = generator->Generate();
+                    launcher->DetatchFromParent();
 
-                objects.push_front(launcher);
-
-                int cost = generator->GetCost();
-
-                for (int i = currentEnergy.size() - 1; i >= 0; i--) {
-                    if (cost == 0)
-                        break;
-
-                    if (!currentEnergy[i]->enabled)
-                        continue;
-
-                    currentEnergy[i]->enabled = false;
-                    cost--;
+                    objects.push_front(launcher);
+                    break;
                 }
+            }
+        }
+    }
 
-                break;
+    {
+        if (button == 2) {
+            for (Spot* spot : spots) {
+                auto pos = spot->GetPosition();
+                auto scl = spot->GetScale();
+
+                if (!((pos.x - scl.x / 2 <= mouseX && mouseX <= pos.x + scl.x / 2) &&
+                      (pos.y - scl.y / 2 <= mouseY && mouseY <= pos.y + scl.y / 2)))
+                    continue;
+
+                Launcher* l = spot->GetLauncher();
+
+                if (l != nullptr) {
+                    for (auto it = objects.begin(); it != objects.end(); it++)
+                        if (*it == l) {
+                            spot->Detatch();
+                            objects.erase(it);
+                            return;
+                        }
+                }
             }
         }
     }
@@ -316,12 +475,33 @@ void Hw1::OnMouseBtnRelease(int mouseX, int mouseY, int button, int mods)
             if (launcher != nullptr && button == 1) {
                 spot->Attatch(launcher);
                 launcher->AttatchToParent(spot);
+
+                int cost = launcher->GetCost();
+
+                for (int i = currentEnergy.size() - 1; i >= 0; i--) {
+                    if (cost == 0)
+                        break;
+
+                    if (!currentEnergy[i]->enabled)
+                        continue;
+
+                    currentEnergy[i]->enabled = false;
+                    cost--;
+                }
+
                 launcher = nullptr;
                 return;
             }
+        }
+    }
 
-            if (button == 2)
-                spot->Detatch();
+    if (launcher != nullptr && button == 1) {
+        for (auto it = objects.begin(); it != objects.end(); it++) {
+            if (*it == launcher) {
+                objects.erase(it);
+                delete launcher;
+                break;
+            }
         }
     }
 
@@ -359,23 +539,68 @@ void Hw1::EnableNewEnergy(int count)
     std::uniform_int_distribution<int> x(60, resolution.x), y(60, resolution.y);
 
     for (int i = 0; i < count; i++) {
-        if (i == newEnergy.size())
-            break;
+        Energy* energy = new Energy(VertexColor::PURPLE);
 
-        newEnergy[i]->enabled = true;
-        newEnergy[i]->SetPosition({ x(engine), y(engine) });
+        energy->Init();
+        energy->SetScale({ 60, 60 });
+        energy->SetPosition({ x(engine), y(engine) });
+
+        objects.push_front(energy);
+        newEnergy.push_back(energy);
     }
 }
 
 void Hw1::EnableEnemies(int count)
 {
-    for (int i = 0; i < count; i++) {
-        if (i == enemies.size())
-            break;
+    std::unordered_map<glm::vec3, int> colors{ { VertexColor::PURPLE, 3 },
+                                               { VertexColor::YELLOW, 2 },
+                                               { VertexColor::BLUE, 2 },
+                                               { VertexColor::ORANGE, 1 } };
 
-        enemies[i]->Reset();
-        enemies[i]->SetPosition({ 1280 + (i * 100), enemies[i]->GetPosition().y });
-        enemies[i]->SetScale({ 80, 80 });
+    std::vector<float> heights;
+    int current = 1;
+
+    for (auto* spot : spots) {
+        float y = spot->GetPosition().y;
+
+        bool found = false;
+
+        for (float height : heights) {
+            if (height == y) {
+                found = true;
+                break;
+            }
+        }
+
+        if (!found)
+            heights.push_back(y);
+    }
+
+    std::random_device rd;
+    std::default_random_engine engine(rd());
+    std::uniform_int_distribution<int> c(0, colors.size() - 1), h(0, heights.size() - 1);
+
+    for (int i = 0; i < count; i++) {
+        Enemy* enemy = nullptr;
+        int c_pos = c(engine);
+        int h_pos = h(engine);
+
+        int j = 0;
+
+        for (auto it = colors.begin(); it != colors.end(); it++) {
+            if (j == c_pos) {
+                enemy = new Enemy(it->first, it->second);
+                break;
+            }
+
+            j++;
+        }
+
+        enemy->Init();
+        enemy->SetScale({ 80, 80 });
+        enemy->SetPosition({ 1280 + (700 * i), heights[h_pos] });
+        enemies.push_back(enemy);
+        objects.push_front(enemy);
     }
 }
 
@@ -388,4 +613,107 @@ int Hw1::GetCurrentEnergyLevel()
             result++;
 
     return result;
+}
+
+void Hw1::UpdateEnemies(float deltaTimeSeconds)
+{
+    for (auto enemy : enemies) {
+        if (!enemy->enabled)
+            continue;
+
+        switch (enemy->state) {
+        case ACTIVE:
+            enemy->AddPosition({ -200 * deltaTimeSeconds, 0 });
+            enemy->AddRotation(90 * deltaTimeSeconds * TO_RADIANS);
+            break;
+        case HIT:
+            enemy->AddScale({ -300 * deltaTimeSeconds, -300 * deltaTimeSeconds });
+            break;
+        case DISABLED:
+            break;
+        }
+    }
+}
+
+void Hw1::UpdateProjectiles(float deltaTimeSeconds)
+{
+    for (auto projectile : projectiles) {
+        switch (projectile->state) {
+        case ACTIVE:
+            projectile->AddPosition({ 400 * deltaTimeSeconds, 0 });
+            projectile->AddRotation(2 * -deltaTimeSeconds);
+            break;
+        case HIT:
+            projectile->AddScale({ -500 * deltaTimeSeconds, -500 * deltaTimeSeconds });
+        case DISABLED:
+            break;
+        }
+    }
+}
+
+void Hw1::UpdateSpots(float deltaTimeSeconds)
+{
+    {
+        for (auto spot : spots) {
+            Launcher* l = spot->GetLauncher();
+
+            if (l != nullptr && l->state == ACTIVE) {
+                l->Update(deltaTimeSeconds);
+
+                glm::vec3 color = l->GetColor();
+
+                for (auto enemy : enemies) {
+                    if (enemy->GetColor() == color &&
+                        enemy->GetPosition().y == spot->GetPosition().y) {
+                        Projectile* projectile = l->Launch();
+
+                        if (projectile != nullptr) {
+                            objects.push_front(projectile);
+                            projectiles.push_back(projectile);
+                        }
+
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    {
+        for (auto spot : spots) {
+            Launcher* l = spot->GetLauncher();
+
+            if (!l)
+                continue;
+
+            switch (l->state) {
+            case ACTIVE:
+                break;
+            case HIT:
+                l->AddScale({ -5 * deltaTimeSeconds, -5 * deltaTimeSeconds });
+                break;
+            case DISABLED:
+                for (auto it_obj = objects.begin(); it_obj != objects.end(); it_obj++) {
+                    Object2D* obj = *it_obj;
+
+                    if (obj == l) {
+                        objects.erase(it_obj);
+                        break;
+                    }
+                }
+                break;
+            }
+        }
+    }
+}
+
+void Hw1::UpdateObjects(float deltaTimeSeconds)
+{
+    for (auto* object : objects) {
+        if (!object->enabled)
+            continue;
+
+        for (auto [mesh, modelMatrix] : object->GetRenderDetails())
+            RenderMesh2D(mesh, shaders["VertexColor"], modelMatrix);
+    }
 }

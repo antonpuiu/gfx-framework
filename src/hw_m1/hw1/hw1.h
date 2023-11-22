@@ -35,19 +35,28 @@ namespace m1
 
         int GetCurrentEnergyLevel();
 
+        void UpdateEnemies(float deltaTimeSeconds);
+        void UpdateProjectiles(float deltaTimeSeconds);
+        void UpdateSpots(float deltaTimeSeconds);
+        void UpdateObjects(float deltaTimeSeconds);
+
     private:
-        // General objects, used for rendering purposes.
         std::list<Object2D*> objects;
 
         std::vector<Object2D*> lifes;
-
         std::vector<Object2D*> currentEnergy;
-        std::vector<Object2D*> newEnergy;
+        std::vector<Energy*> newEnergy;
+        std::vector<Enemy*> enemies;
 
-        std::vector<Object2D*> enemies;
+        float generateEnergy;
+        float intervalEnergy;
+
+        float generateEnemy;
+        float intervalEnemy;
 
         Limit* limit;
         Launcher* launcher;
+        std::list<Projectile*> projectiles;
         std::vector<Spot*> spots;
 
         std::vector<Generator*> generators;

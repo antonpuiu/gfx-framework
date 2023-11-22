@@ -11,8 +11,10 @@ namespace m1
         Object2D() = default;
         Object2D(Object2D&);
 
-    protected:
+    public:
         virtual ~Object2D();
+
+        virtual void Update(float deltaTimeSeconds);
 
     public:
         std::vector<std::pair<Mesh*, glm::mat3> > GetRenderDetails();
@@ -25,6 +27,8 @@ namespace m1
     public:
         ColorObject2D(glm::vec3 color);
         ColorObject2D(ColorObject2D& colorObject2D);
+
+        glm::vec3 GetColor();
 
     protected:
         glm::vec3 color;
@@ -41,19 +45,42 @@ namespace m1
         virtual void Init() override;
     };
 
+    class Projectile : public ColorObject2D {
+    public:
+        Projectile();
+        Projectile(glm::vec3 color, int life);
+
+    public:
+        virtual Projectile* Create() override;
+        virtual Projectile* Clone() override;
+        virtual void Init() override;
+
+    public:
+        int life;
+    };
+
     class Launcher : public ColorObject2D {
     public:
         Launcher();
         Launcher(glm::vec3 color, int cost);
         Launcher(Launcher&);
 
+        int GetCost();
+        Projectile* Launch();
+
     public:
         virtual Launcher* Create() override;
         virtual Launcher* Clone() override;
         virtual void Init() override;
+        virtual void Update(float deltaTimeSeonds) override;
+
+    private:
+        static inline float RESET_TIME = 0.5;
 
     private:
         int cost;
+        int life;
+        float timeout;
     };
 
     class Spot : public Object2D {
@@ -63,6 +90,8 @@ namespace m1
 
         void Attatch(Launcher* launcher);
         void Detatch();
+
+        Launcher* GetLauncher();
 
     public:
         virtual Spot* Create() override;
@@ -95,13 +124,16 @@ namespace m1
     class Enemy : public ColorObject2D {
     public:
         Enemy();
-        Enemy(glm::vec3 color);
+        Enemy(glm::vec3 color, int life);
         Enemy(Enemy&);
 
     public:
         virtual Enemy* Create() override;
         virtual Enemy* Clone() override;
         virtual void Init() override;
+
+    public:
+        int life;
     };
 
     class Life : public Object2D {

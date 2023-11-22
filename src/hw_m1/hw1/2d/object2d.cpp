@@ -20,6 +20,10 @@ Object2D::~Object2D()
         delete object;
 }
 
+void Object2D::Update(float deltaTimeSeconds)
+{
+}
+
 std::vector<std::pair<Mesh*, glm::mat3> > Object2D::GetRenderDetails()
 {
     std::vector<std::pair<Mesh*, glm::mat3> > result;
@@ -47,6 +51,11 @@ ColorObject2D::ColorObject2D(ColorObject2D& colorObject2D)
     : Object2D(colorObject2D)
     , color(colorObject2D.color)
 {
+}
+
+glm::vec3 ColorObject2D::GetColor()
+{
+    return color;
 }
 
 Limit::Limit(Limit& l)
@@ -80,6 +89,37 @@ void Limit::Init()
     limit->Init();
 }
 
+Projectile::Projectile()
+    : Projectile(VertexColor::WHITE, 0)
+{
+}
+
+Projectile::Projectile(glm::vec3(color), int life)
+    : ColorObject2D(color)
+    , life(life)
+{
+}
+
+Projectile* Projectile::Create()
+{
+    return new Projectile();
+}
+
+Projectile* Projectile::Clone()
+{
+    return new Projectile(*this);
+}
+
+void Projectile::Init()
+{
+    Star* star = new Star(color);
+
+    objects.push_back(star);
+    AddChildren(star);
+
+    star->Init();
+}
+
 Launcher::Launcher()
     : Launcher(VertexColor::WHITE, 0)
 {
@@ -88,31 +128,55 @@ Launcher::Launcher()
 Launcher::Launcher(glm::vec3 color, int cost)
     : ColorObject2D(color)
     , cost(cost)
+    , life(cost)
+    , timeout(RESET_TIME)
 {
 }
 
 Launcher::Launcher(Launcher& launcher)
     : ColorObject2D(launcher)
     , cost(launcher.cost)
+    , life(launcher.cost)
+    , timeout(RESET_TIME)
 {
     auto* body = launcher.objects[0]->Clone();
-
-    // body->SetScale({ 0.35f, 0.35f });
-    // body->SetPosition({ -0.25f, 0 });
 
     objects.push_back(body);
     AddChildren(body);
 
     auto* pipe = launcher.objects[1]->Clone();
 
-    pipe->SetScale({ 1.15, 0.5 });
-    pipe->SetPosition({ 0.8, 0 });
-
     objects.push_back(pipe);
     body->AddChildren(pipe);
 
     for (auto* object : objects)
         object->Init();
+}
+
+Projectile* Launcher::Launch()
+{
+    Projectile* projectile = nullptr;
+
+    if (timeout < RESET_TIME || !enabled)
+        return projectile;
+
+    timeout = 0.0;
+    life--;
+
+    projectile = new Projectile(color, cost);
+    projectile->AttatchToParent(parent);
+    projectile->DetatchFromParent();
+    glm::vec2 scl = projectile->GetScale();
+    float modifier = 0.4;
+    projectile->SetScale({ scl.x * modifier, scl.y * modifier });
+    projectile->Init();
+
+    return projectile;
+}
+
+int Launcher::GetCost()
+{
+    return cost;
 }
 
 Launcher* Launcher::Create()
@@ -123,6 +187,14 @@ Launcher* Launcher::Create()
 Launcher* Launcher::Clone()
 {
     return new Launcher(*this);
+}
+
+void Launcher::Update(float deltaTimeSeconds)
+{
+    if (life <= 0)
+        enabled = false;
+
+    timeout += deltaTimeSeconds;
 }
 
 void Launcher::Init()
@@ -175,8 +247,13 @@ void Spot::Attatch(Launcher* launcher)
 
 void Spot::Detatch()
 {
-    // delete launcher;
+    delete launcher;
     launcher = nullptr;
+}
+
+Launcher* Spot::GetLauncher()
+{
+    return launcher;
 }
 
 void Spot::Init()
@@ -218,7 +295,6 @@ Generator* Generator::Clone()
 Launcher* Generator::Generate()
 {
     return new Launcher(*launcher);
-    // return launcher;
 }
 
 int Generator::GetCost()
@@ -253,17 +329,18 @@ void Generator::Init()
 }
 
 Enemy::Enemy()
-    : ColorObject2D(VertexColor::WHITE)
+    : Enemy(VertexColor::WHITE, 0)
 {
 }
 
-Enemy::Enemy(glm::vec3 color)
+Enemy::Enemy(glm::vec3 color, int life)
     : ColorObject2D(color)
+    , life(life)
 {
 }
 
 Enemy::Enemy(Enemy& enemy)
-    : Enemy(enemy.color)
+    : Enemy(enemy.color, enemy.life)
 {
 }
 
