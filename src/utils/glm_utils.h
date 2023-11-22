@@ -10,50 +10,70 @@
 #include "glm/gtc/quaternion.hpp"
 #include "glm/gtx/quaternion.hpp"
 
-
-inline glm::vec3 NormalizedRGB(unsigned char r, unsigned char g, unsigned char b) {
+inline glm::vec3 NormalizedRGB(unsigned char r, unsigned char g, unsigned char b)
+{
     return glm::vec3(r / 255.f, g / 255.f, b / 255.f);
 }
 
+template <> struct std::hash<glm::vec3> {
+    std::size_t operator()(const glm::vec3& k) const
+    {
+        using std::size_t;
+        using std::hash;
+        using std::string;
+
+        // Compute individual hash values for first,
+        // second and third and combine them using XOR
+        // and bit shifting:
+
+        return ((hash<float>()(k.x) ^ (hash<float>()(k.y) << 1)) >> 1) ^ (hash<float>()(k.z) << 1);
+    }
+};
 
 /**
  *  overload ostream operator << for easy printing glm classes
  */
-inline std::ostream &operator<< (std::ostream &out, const glm::ivec2 &vec) {
+inline std::ostream& operator<<(std::ostream& out, const glm::ivec2& vec)
+{
     out << "[" << vec.x << " " << vec.y << "]";
     return out;
 }
 
-inline std::ostream &operator<< (std::ostream &out, const glm::vec2 &vec) {
+inline std::ostream& operator<<(std::ostream& out, const glm::vec2& vec)
+{
     out << "[" << vec.x << " " << vec.y << "]";
     return out;
 }
 
-inline std::ostream &operator<< (std::ostream &out, const glm::ivec3 &vec) {
+inline std::ostream& operator<<(std::ostream& out, const glm::ivec3& vec)
+{
     out << "[" << vec.x << " " << vec.y << " " << vec.z << "]";
     return out;
 }
 
-inline std::ostream &operator<< (std::ostream &out, const glm::vec3 &vec) {
+inline std::ostream& operator<<(std::ostream& out, const glm::vec3& vec)
+{
     out << "[" << vec.x << " " << vec.y << " " << vec.z << "]";
     return out;
 }
 
-inline std::ostream &operator<< (std::ostream &out, const glm::ivec4 &vec) {
+inline std::ostream& operator<<(std::ostream& out, const glm::ivec4& vec)
+{
     out << "[" << vec.x << " " << vec.y << " " << vec.z << " " << vec.w << "]";
     return out;
 }
 
-inline std::ostream &operator<< (std::ostream &out, const glm::vec4 &vec) {
+inline std::ostream& operator<<(std::ostream& out, const glm::vec4& vec)
+{
     out << "[" << vec.x << " " << vec.y << " " << vec.z << " " << vec.w << "]";
     return out;
 }
 
-inline std::ostream &operator<< (std::ostream &out, const glm::quat &rot) {
+inline std::ostream& operator<<(std::ostream& out, const glm::quat& rot)
+{
     out << "[" << rot.x << " " << rot.y << " " << rot.z << " " << rot.w << "]";
     return out;
 }
-
 
 namespace glm
 {
@@ -77,25 +97,23 @@ namespace glm
         float x = xx * sinT;
         float y = yy * sinT;
         float z = zz * sinT;
-        float w = cos(t);        // W value by cos(theta/2)
+        float w = cos(t); // W value by cos(theta/2)
 
         return glm::quat(w, x, y, z);
     }
 
     // Convert a quaternion to axis angle
-    inline glm::vec4 GetAxisAngle(glm::quat &rotation, int precision = 0)
+    inline glm::vec4 GetAxisAngle(glm::quat& rotation, int precision = 0)
     {
         float angle = acos(rotation.w);
 
-        if (angle == 0)
-        {
+        if (angle == 0) {
             return glm::vec4(1, 0, 0, 0);
         }
 
         auto t = sqrt(1 - rotation.w * rotation.w);
 
-        if (precision)
-        {
+        if (precision) {
             auto x = round(rotation.x / t * precision) / precision;
             auto y = round(rotation.y / t * precision) / precision;
             auto z = round(rotation.z / t * precision) / precision;

@@ -7,6 +7,7 @@
 
 #if defined(WITH_LAB_M1)
 #include "lab_m1/lab_list.h"
+#include "hw_m1/hw_list.h"
 #endif
 
 #if defined(WITH_LAB_M2)
@@ -42,7 +43,7 @@ int main(int argc, char** argv)
     (void)Engine::Init(wp);
 
     // Create a new 3D world and start running it
-    World* world = new m1::Lab7();
+    World* world = new m1::Hw1();
 
     world->Init();
     world->Run();
