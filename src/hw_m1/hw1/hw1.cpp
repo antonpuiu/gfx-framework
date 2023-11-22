@@ -207,7 +207,7 @@ void Hw1::FrameEnd()
             bool inc = true;
 
             switch (projectile->state) {
-            case ACTIVE:
+            case ENABLED:
                 for (auto enemy : enemies) {
                     glm::vec2 e_pos = enemy->GetPosition(), e_scl = enemy->GetScale();
 
@@ -248,7 +248,7 @@ void Hw1::FrameEnd()
             bool inc = true;
 
             switch (enemy->state) {
-            case ACTIVE:
+            case ENABLED:
                 if (enemy->life <= 0)
                     enemy->state = HIT;
 
@@ -622,7 +622,7 @@ void Hw1::UpdateEnemies(float deltaTimeSeconds)
             continue;
 
         switch (enemy->state) {
-        case ACTIVE:
+        case ENABLED:
             enemy->AddPosition({ -200 * deltaTimeSeconds, 0 });
             enemy->AddRotation(90 * deltaTimeSeconds * TO_RADIANS);
             break;
@@ -639,7 +639,7 @@ void Hw1::UpdateProjectiles(float deltaTimeSeconds)
 {
     for (auto projectile : projectiles) {
         switch (projectile->state) {
-        case ACTIVE:
+        case ENABLED:
             projectile->AddPosition({ 400 * deltaTimeSeconds, 0 });
             projectile->AddRotation(2 * -deltaTimeSeconds);
             break;
@@ -657,7 +657,7 @@ void Hw1::UpdateSpots(float deltaTimeSeconds)
         for (auto spot : spots) {
             Launcher* l = spot->GetLauncher();
 
-            if (l != nullptr && l->state == ACTIVE) {
+            if (l != nullptr && l->state == ENABLED) {
                 l->Update(deltaTimeSeconds);
 
                 glm::vec3 color = l->GetColor();
@@ -687,7 +687,7 @@ void Hw1::UpdateSpots(float deltaTimeSeconds)
                 continue;
 
             switch (l->state) {
-            case ACTIVE:
+            case ENABLED:
                 break;
             case HIT:
                 l->AddScale({ -5 * deltaTimeSeconds, -5 * deltaTimeSeconds });

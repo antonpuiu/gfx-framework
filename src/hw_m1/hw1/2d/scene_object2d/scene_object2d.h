@@ -4,7 +4,7 @@
 
 namespace m1
 {
-    enum ObjectState { ACTIVE, HIT, DISABLED };
+    enum Object2DState { ENABLED, HIT, DISABLED };
 
     struct SceneObject2D {
         SceneObject2D();
@@ -12,6 +12,6 @@ namespace m1
         void Reset();
 
         bool enabled;
-        ObjectState state;
+        Object2DState state;
     };
 }

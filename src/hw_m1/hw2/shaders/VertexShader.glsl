@@ -11,13 +11,13 @@ uniform mat4 Model;
 uniform mat4 View;
 uniform mat4 Projection;
 
-uniform float time;
+uniform vec3 object_color;
 
 // Output
 out vec3 color;
 
 void main()
 {
-    color = v_color;
+    color = object_color;
     gl_Position = Projection * View * Model * vec4(v_position, 1.0);
 }

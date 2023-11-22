@@ -1,7 +1,9 @@
 #pragma once
 
 #include "components/simple_scene.h"
+#include "components/camera_input.h"
 #include "lab_m1/lab5/lab_camera.h"
+#include "hw_m1/hw2/3d/object3d.h"
 
 namespace m1
 {
@@ -17,7 +19,8 @@ namespace m1
         void Update(float deltaTimeSeconds) override;
         void FrameEnd() override;
 
-        void RenderMesh(Mesh* mesh, Shader* shader, const glm::mat4& modelMatrix) override;
+        void RenderSimpleMesh(Mesh* mesh, Shader* shader, const glm::mat4& modelMatrix,
+                              glm::vec3 color = VertexColor::WHITE);
 
         void OnInputUpdate(float deltaTime, int mods) override;
         void OnKeyPress(int key, int mods) override;
@@ -30,7 +33,8 @@ namespace m1
 
     private:
         implemented::Camera* camera;
-        glm::mat4 projectionMatrix;
-        float fov;
+        gfxc::ImplementedCameraInput* cameraInput;
+
+        std::vector<Object3D*> objects;
     };
 } // namespace m1

@@ -4,12 +4,12 @@ using namespace m1;
 
 SceneObject2D::SceneObject2D()
     : enabled(true)
-    , state(ObjectState::ACTIVE)
+    , state(Object2DState::ENABLED)
 {
 }
 
 void SceneObject2D::Reset()
 {
     enabled = true;
-    state = ObjectState::ACTIVE;
+    state = Object2DState::ENABLED;
 }

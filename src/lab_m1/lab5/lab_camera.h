@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/engine.h"
 #include "glm/ext/quaternion_geometric.hpp"
 #include "utils/glm_utils.h"
 #include "utils/math_utils.h"
@@ -10,6 +11,9 @@ namespace implemented
     public:
         Camera()
         {
+            fov = 60.0;
+            projectionMatrix = glm::perspective(
+                RADIANS(fov), Engine::GetWindow()->props.aspectRatio, 0.01f, 200.0f);
             position = glm::vec3(0, 2, 5);
             forward = glm::vec3(0, 0, -1);
             up = glm::vec3(0, 1, 0);
@@ -43,6 +47,18 @@ namespace implemented
             // walk forward, then you will still keep the same relative
             // distance (height) to the ground!
             glm::vec3 dir = glm::normalize(glm::vec3(forward.x, 0, forward.z));
+            position += dir * distance;
+        }
+
+        void MoveUp(float distance)
+        {
+            glm::vec3 dir = glm::normalize(glm::vec3(0, up.y, up.z));
+            position += dir * distance;
+        }
+
+        void MoveRight(float distance)
+        {
+            glm::vec3 dir = glm::normalize(glm::vec3(right.x, right.y, 0));
             position += dir * distance;
         }
 
@@ -149,12 +165,19 @@ namespace implemented
             return glm::lookAt(position, position + forward, up);
         }
 
+        glm::mat4 GetProjectionMatrix()
+        {
+            return projectionMatrix;
+        }
+
         glm::vec3 GetTargetPosition()
         {
             return position + forward * distanceToTarget;
         }
 
     public:
+        glm::mat4 projectionMatrix;
+        float fov;
         float distanceToTarget;
         glm::vec3 position;
         glm::vec3 forward;

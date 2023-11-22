@@ -45,15 +45,15 @@ void Lab2::Init()
     {
         vector<VertexFormat> vertices{
             // TODO(student): Complete the vertices data for the cube mesh
-            VertexFormat(glm::vec3(-1, -1, 1), VertexColor::RED), // 0
-            VertexFormat(glm::vec3(-1, -1, -1), VertexColor::RED), // 1
-            VertexFormat(glm::vec3(1, -1, -1), VertexColor::RED), // 2
-            VertexFormat(glm::vec3(1, -1, 1), VertexColor::RED), // 3
+            VertexFormat(glm::vec3(-0.5, -0.5, 0.5), VertexColor::RED), // 0
+            VertexFormat(glm::vec3(-0.5, -0.5, -0.5), VertexColor::RED), // 1
+            VertexFormat(glm::vec3(0.5, -0.5, -0.5), VertexColor::RED), // 2
+            VertexFormat(glm::vec3(0.5, -0.5, 0.5), VertexColor::RED), // 3
 
-            VertexFormat(glm::vec3(-1, 1, 1), VertexColor::BLUE), // 4
-            VertexFormat(glm::vec3(-1, 1, -1), VertexColor::BLUE), // 5
-            VertexFormat(glm::vec3(1, 1, -1), VertexColor::BLUE), // 6
-            VertexFormat(glm::vec3(1, 1, 1), VertexColor::BLUE) // 7
+            VertexFormat(glm::vec3(-0.5, 0.5, 0.5), VertexColor::BLUE), // 4
+            VertexFormat(glm::vec3(-0.5, 0.5, -0.5), VertexColor::BLUE), // 5
+            VertexFormat(glm::vec3(0.5, 0.5, -0.5), VertexColor::BLUE), // 6
+            VertexFormat(glm::vec3(0.5, 0.5, 0.5), VertexColor::BLUE) // 7
         };
 
         vector<unsigned int> indices = {
@@ -249,7 +249,8 @@ void Lab2::Update(float deltaTimeSeconds)
     RenderMesh(meshes["rectangle_ex6"], shaders["VertexColor"], glm::vec3(2, 0, 2));
 
     // TODO(student): Draw the circle
-    RenderMesh(meshes["circle_bonus"], shaders["VertexColor"], glm::vec3(10, 0, 0));
+    RenderMesh(meshes["circle_bonus"], shaders["VertexColor"], glm::vec3(10, 0, 0),
+               glm::vec3(1, 1, 3));
 
     // TODO(student): Disable face culling
     glDisable(GL_CULL_FACE);
@@ -338,15 +339,19 @@ void Lab2::GenerateCircle()
 
     delete meshes["circle_bonus"];
 
-    for (int i = 0; i < resolution; i++) {
-        float arg = 2.f * M_PI * i / resolution;
+    for (int j = 0; j < 2; j++) {
+        for (int i = 0; i < resolution; i++) {
+            float arg = 2.f * M_PI * i / resolution;
 
-        vertices.push_back(VertexFormat(glm::vec3(cos(arg), sin(arg), 0), VertexColor::RED));
-        indices.push_back(i);
+            vertices.push_back(
+                VertexFormat(glm::vec3(cos(arg), sin(arg), j - 0.5), VertexColor::RED));
+            indices.push_back(i);
+        }
+        indices.push_back(0);
     }
 
     meshes["circle_bonus"] = new Mesh("generated circle bonus");
 
     CreateMesh("circle_bonus", vertices, indices);
-    meshes["circle_bonus"]->SetDrawMode(GL_LINE_LOOP);
+    meshes["circle_bonus"]->SetDrawMode(GL_TRIANGLE_FAN);
 }
