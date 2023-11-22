@@ -52,6 +52,11 @@ void Hw2::Init()
     }
 
     {
+        objects.push_back(new TankBody());
+        objects.push_back(new TankTurret());
+    }
+
+    {
         for (auto object : objects)
             object->Init();
     }
@@ -69,28 +74,14 @@ void Hw2::FrameStart()
 
 void Hw2::Update(float deltaTimeSeconds)
 {
-    {
-        glm::mat4 modelMatrix = glm::mat4(1.f);
-        modelMatrix *= glm::translate(modelMatrix, glm::vec3(0, 0.01f, 0));
-        // modelMatrix *= glm::scale(modelMatrix, glm::vec3(1.5f, 2.f, 1.f));
-        modelMatrix *= glm::scale(modelMatrix, glm::vec3(1, 0.005, 1));
-        RenderSimpleMesh(meshes["box"], shaders["HwShader"], modelMatrix, VertexColor::RED);
-    }
-
-    // {
-    //     RenderSimpleMesh(meshes["plane"], shaders["HwShader"], glm::mat4(1), VertexColor::WHITE);
-    // }
-
-    {
-        for (auto object : objects)
-            for (auto primitive : object->GetPrimitives())
-                RenderSimpleMesh(primitive->GetMesh(), shaders["HwShader"],
-                                 primitive->GetModelMatrix(), primitive->GetColor());
-    }
 }
 
 void Hw2::FrameEnd()
 {
+    for (auto object : objects)
+        for (auto primitive : object->GetPrimitives())
+            RenderSimpleMesh(primitive->GetMesh(), shaders["HwShader"], primitive->GetModelMatrix(),
+                             primitive->GetColor());
 }
 
 void Hw2::RenderSimpleMesh(Mesh* mesh, Shader* shader, const glm::mat4& modelMatrix,

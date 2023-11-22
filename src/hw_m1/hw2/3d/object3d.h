@@ -66,4 +66,11 @@ namespace m1
         virtual TankTracks* Create() override;
         virtual TankTracks* Clone() override;
     };
+
+    class Tank : public Object3D {
+    public:
+        virtual void InitObject() override;
+        virtual Tank* Create() override;
+        virtual Tank* Clone() override;
+    };
 }

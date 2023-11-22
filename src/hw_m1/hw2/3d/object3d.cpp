@@ -70,10 +70,20 @@ void Plane::InitObject()
 
 void TankBody::InitObject()
 {
+    Cube* cube = new Cube();
+    cube->SetScale({ 0.4, 0.2, 0.7 });
+    cube->SetPosition({ 0, 0.15, 0 });
+    cube->SetColor(VertexColor::GREEN - glm::vec3(0, 0.9, 0));
+    primitives.push_back(cube);
 }
 
 void TankTurret::InitObject()
 {
+    Cube* cube = new Cube();
+    cube->SetScale({ 0.3, 0.1, 0.3 });
+    cube->SetPosition({ 0, 0.3, 0 });
+    cube->SetColor(VertexColor::GREEN - glm::vec3(0, 0.7, 0));
+    primitives.push_back(cube);
 }
 
 void TankProjectile::InitObject()
@@ -89,6 +99,10 @@ void TankTracks::InitObject()
     Cube* cube = new Cube();
     cube->SetScale({ 0.1, 0.1, 0.6 });
     primitives.push_back(cube);
+}
+
+void Tank::InitObject()
+{
 }
 
 Plane* Plane::Create()
@@ -121,6 +135,11 @@ TankTracks* TankTracks::Create()
     return new TankTracks();
 }
 
+Tank* Tank::Create()
+{
+    return new Tank();
+}
+
 Plane* Plane::Clone()
 {
     return new Plane(*this);
@@ -149,4 +168,9 @@ TankGun* TankGun::Clone()
 TankTracks* TankTracks::Clone()
 {
     return new TankTracks(*this);
+}
+
+Tank* Tank::Clone()
+{
+    return new Tank(*this);
 }
