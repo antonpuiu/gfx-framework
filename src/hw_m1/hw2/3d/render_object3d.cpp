@@ -14,8 +14,18 @@ Cube::Cube()
 {
 }
 
-Cylinder::Cylinder()
-    : Cylinder(VertexColor::WHITE)
+CylinderBase::CylinderBase()
+    : CylinderBase(VertexColor::WHITE)
+{
+}
+
+CylinderCover::CylinderCover()
+    : CylinderBase(VertexColor::WHITE)
+{
+}
+
+CylinderBody::CylinderBody()
+    : CylinderBase(VertexColor::WHITE)
 {
 }
 
@@ -35,8 +45,18 @@ Cube::Cube(glm::vec3 color)
 {
 }
 
-Cylinder::Cylinder(glm::vec3 color)
+CylinderBase::CylinderBase(glm::vec3 color)
     : RenderObject3D(color)
+{
+}
+
+CylinderCover::CylinderCover(glm::vec3 color)
+    : CylinderBase(color)
+{
+}
+
+CylinderBody::CylinderBody(glm::vec3 color)
+    : CylinderBase(color)
 {
 }
 
@@ -49,21 +69,6 @@ RenderObject3D::RenderObject3D(RenderObject3D& renderObject3D)
     : Transform3D(renderObject3D)
     , mesh(renderObject3D.mesh)
     , color(renderObject3D.color)
-{
-}
-
-Cube::Cube(Cube& cube)
-    : RenderObject3D(cube)
-{
-}
-
-Cylinder::Cylinder(Cylinder& cube)
-    : RenderObject3D(cube)
-{
-}
-
-Sphere::Sphere(Sphere& sphere)
-    : RenderObject3D(sphere)
 {
 }
 
@@ -87,36 +92,6 @@ void RenderObject3D::SetColor(glm::vec3 color)
 Mesh* RenderObject3D::GetMesh()
 {
     return mesh;
-}
-
-RenderObject3D* Cube::Create()
-{
-    return new Cube();
-}
-
-RenderObject3D* Cylinder::Create()
-{
-    return new Cylinder();
-}
-
-RenderObject3D* Sphere::Create()
-{
-    return new Sphere();
-}
-
-RenderObject3D* Cube::Clone()
-{
-    return new Cube(*this);
-}
-
-RenderObject3D* Cylinder::Clone()
-{
-    return new Cylinder(*this);
-}
-
-RenderObject3D* Sphere::Clone()
-{
-    return new Sphere(*this);
 }
 
 void Cube::Init()
@@ -162,10 +137,108 @@ void Cube::Init()
     gfxc::SimpleScene::meshes[name] = mesh;
 }
 
-void Cylinder::Init()
+void CylinderCover::Init()
 {
+    std::string name = "cylinder_cover" + std::to_string(color.x) + std::to_string(color.y) +
+                       std::to_string(color.z);
+
+    if (gfxc::SimpleScene::meshes.find(name) != gfxc::SimpleScene::meshes.end()) {
+        mesh = gfxc::SimpleScene::meshes.at(name);
+        return;
+    }
+
+    mesh = new Mesh(name);
+
+    std::vector<VertexFormat> vertices;
+    std::vector<unsigned int> indices;
+
+    vertices.push_back({ VertexFormat(glm::vec3(0, -OFFSET, 0)) });
+
+    for (int i = 0; i <= RESOLUTION; i++) {
+        float angle = 2.f * M_PI * static_cast<float>(i) / static_cast<float>(RESOLUTION);
+        vertices.push_back(VertexFormat(glm::vec3(cos(angle), -OFFSET, sin(angle)), color));
+        indices.push_back(i);
+    }
+
+    indices.push_back(1);
+
+    mesh->SetDrawMode(GL_TRIANGLE_FAN);
+    mesh->InitFromData(vertices, indices);
+    gfxc::SimpleScene::meshes[name] = mesh;
+}
+
+void CylinderBody::Init()
+{
+    std::string name = "cylinder_body" + std::to_string(color.x) + std::to_string(color.y) +
+                       std::to_string(color.z);
+
+    if (gfxc::SimpleScene::meshes.find(name) != gfxc::SimpleScene::meshes.end()) {
+        mesh = gfxc::SimpleScene::meshes.at(name);
+        return;
+    }
+
+    mesh = new Mesh(name);
+
+    std::vector<VertexFormat> vertices;
+    std::vector<unsigned int> indices;
+
+    int idx = 0;
+
+    for (int i = 0; i <= RESOLUTION; i++) {
+        float angle = 2.f * M_PI * static_cast<float>(i) / static_cast<float>(RESOLUTION);
+        vertices.push_back(VertexFormat(glm::vec3(cos(angle), 1 - OFFSET, sin(angle)), color));
+        vertices.push_back(VertexFormat(glm::vec3(cos(angle), 0 - OFFSET, sin(angle)), color));
+
+        indices.push_back(idx++);
+        indices.push_back(idx++);
+    }
+
+    mesh->SetDrawMode(GL_TRIANGLE_STRIP);
+    mesh->InitFromData(vertices, indices);
+    gfxc::SimpleScene::meshes[name] = mesh;
 }
 
 void Sphere::Init()
 {
+    std::string name =
+        "sphere" + std::to_string(color.x) + std::to_string(color.y) + std::to_string(color.z);
+
+    if (gfxc::SimpleScene::meshes.find(name) != gfxc::SimpleScene::meshes.end()) {
+        mesh = gfxc::SimpleScene::meshes.at(name);
+        return;
+    }
+
+    mesh = new Mesh(name);
+
+    std::vector<VertexFormat> vertices;
+    std::vector<unsigned int> indices;
+
+    int idx = 0;
+
+    for (int i = 0; i < RESOLUTION; i++) {
+        float phi1 = M_PI * static_cast<float>(i) / static_cast<float>(RESOLUTION);
+        float phi2 = M_PI * static_cast<float>(i + 1) / static_cast<float>(RESOLUTION);
+
+        for (int j = 0; j < RESOLUTION; j++) {
+            float theta = 2.0f * M_PI * static_cast<float>(j) / static_cast<float>(RESOLUTION);
+
+            float x1 = sin(phi1) * cos(theta);
+            float y1 = cos(phi1);
+            float z1 = sin(phi1) * sin(theta);
+
+            float x2 = sin(phi2) * cos(theta);
+            float y2 = cos(phi2);
+            float z2 = sin(phi2) * sin(theta);
+
+            vertices.push_back(VertexFormat(glm::vec3(x1, y1, z1), color));
+            vertices.push_back(VertexFormat(glm::vec3(x2, y2, z2), color));
+
+            indices.push_back(idx++);
+            indices.push_back(idx++);
+        }
+    }
+
+    mesh->SetDrawMode(GL_TRIANGLE_STRIP);
+    mesh->InitFromData(vertices, indices);
+    gfxc::SimpleScene::meshes[name] = mesh;
 }

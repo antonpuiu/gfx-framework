@@ -88,10 +88,22 @@ void TankTurret::InitObject()
 
 void TankProjectile::InitObject()
 {
+    Sphere* sphere = new Sphere();
+
+    primitives.push_back(sphere);
 }
 
 void TankGun::InitObject()
 {
+    CylinderCover* topCover = new CylinderCover();
+    CylinderCover* bottomCover = new CylinderCover();
+    CylinderBody* body = new CylinderBody();
+
+    topCover->SetPosition({ 0, 1, 0 });
+
+    primitives.push_back(topCover);
+    primitives.push_back(bottomCover);
+    primitives.push_back(body);
 }
 
 void TankTracks::InitObject()
@@ -103,74 +115,6 @@ void TankTracks::InitObject()
 
 void Tank::InitObject()
 {
-}
-
-Plane* Plane::Create()
-{
-    return new Plane();
-}
-
-TankBody* TankBody::Create()
-{
-    return new TankBody();
-}
-
-TankTurret* TankTurret::Create()
-{
-    return new TankTurret();
-}
-
-TankProjectile* TankProjectile::Create()
-{
-    return new TankProjectile();
-}
-
-TankGun* TankGun::Create()
-{
-    return new TankGun();
-}
-
-TankTracks* TankTracks::Create()
-{
-    return new TankTracks();
-}
-
-Tank* Tank::Create()
-{
-    return new Tank();
-}
-
-Plane* Plane::Clone()
-{
-    return new Plane(*this);
-}
-
-TankBody* TankBody::Clone()
-{
-    return new TankBody(*this);
-}
-
-TankTurret* TankTurret::Clone()
-{
-    return new TankTurret(*this);
-}
-
-TankProjectile* TankProjectile::Clone()
-{
-    return new TankProjectile(*this);
-}
-
-TankGun* TankGun::Clone()
-{
-    return new TankGun(*this);
-}
-
-TankTracks* TankTracks::Clone()
-{
-    return new TankTracks(*this);
-}
-
-Tank* Tank::Clone()
-{
-    return new Tank(*this);
+    // objects.push_back(new TankGun());
+    objects.push_back(new TankProjectile());
 }

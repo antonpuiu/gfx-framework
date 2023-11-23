@@ -22,6 +22,7 @@ void Hw2::Init()
 {
     {
         camera = new implemented::Camera();
+        camera->Set(glm::vec3(0, 2, 3.5f), glm::vec3(0, 1, 0), glm::vec3(0, 1, 0));
         cameraInput = new gfxc::ImplementedCameraInput(camera);
     }
 
@@ -47,13 +48,8 @@ void Hw2::Init()
     }
 
     {
-        TankTracks* tracks = new TankTracks();
-        objects.push_back(tracks);
-    }
-
-    {
-        objects.push_back(new TankBody());
-        objects.push_back(new TankTurret());
+        tank = new Tank();
+        objects.push_back(tank);
     }
 
     {
@@ -70,6 +66,12 @@ void Hw2::FrameStart()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glViewport(0, 0, resolution.x, resolution.y);
     }
+
+    // {
+    //     glLineWidth(3);
+    //     glPointSize(5);
+    //     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    // }
 }
 
 void Hw2::Update(float deltaTimeSeconds)
@@ -97,7 +99,7 @@ void Hw2::RenderSimpleMesh(Mesh* mesh, Shader* shader, const glm::mat4& modelMat
         glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(modelMatrix));
 
         int viewLocation = glGetUniformLocation(shader->program, "View");
-        glm::mat4 viewMatrix = GetSceneCamera()->GetViewMatrix();
+        glm::mat4 viewMatrix = camera->GetViewMatrix();
         glUniformMatrix4fv(viewLocation, 1, GL_FALSE, glm::value_ptr(viewMatrix));
 
         int projLocation = glGetUniformLocation(shader->program, "Projection");

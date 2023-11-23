@@ -50,17 +50,20 @@ void Transform3D::ComputeModelMatrix()
     glm::mat4 scl;
 
     if (detatched) {
-        rot = glm::rotate(glm::mat4(1), glm::radians(rotationDetatched.x), glm::vec3(1, 0, 0)) *
-              glm::rotate(glm::mat4(1), glm::radians(rotationDetatched.y), glm::vec3(0, 1, 0)) *
-              glm::rotate(glm::mat4(1), glm::radians(rotationDetatched.z), glm::vec3(0, 0, 1));
-        trs = glm::translate(glm::mat4(1), posDetatched);
-        scl = glm::scale(glm::mat4(1), scaleDetatched);
+        rot = glm::rotate(glm::mat4(1.f), glm::radians(rotationDetatched.y),
+                          glm::vec3(0.f, 1.f, 0.f)) *
+              glm::rotate(glm::mat4(1.f), glm::radians(rotationDetatched.x),
+                          glm::vec3(1.f, 0.f, 0.f)) *
+              glm::rotate(glm::mat4(1.f), glm::radians(rotationDetatched.z),
+                          glm::vec3(0.f, 0.f, 1.f));
+        trs = glm::translate(glm::mat4(1.f), posDetatched);
+        scl = glm::scale(glm::mat4(1.f), scaleDetatched);
     } else {
-        rot = glm::rotate(glm::mat4(1), glm::radians(rotation.x), glm::vec3(1, 0, 0)) *
-              glm::rotate(glm::mat4(1), glm::radians(rotation.y), glm::vec3(0, 1, 0)) *
-              glm::rotate(glm::mat4(1), glm::radians(rotation.z), glm::vec3(0, 0, 1));
-        trs = glm::translate(glm::mat4(1), pos);
-        scl = glm::scale(glm::mat4(1), scale);
+        rot = glm::rotate(glm::mat4(1.f), glm::radians(rotation.y), glm::vec3(0.f, 1.f, 0.f)) *
+              glm::rotate(glm::mat4(1.f), glm::radians(rotation.x), glm::vec3(1.f, 0.f, 0.f)) *
+              glm::rotate(glm::mat4(1.f), glm::radians(rotation.z), glm::vec3(0.f, 0.f, 1.f));
+        trs = glm::translate(glm::mat4(1.f), pos);
+        scl = glm::scale(glm::mat4(1.f), scale);
     }
 
     if (parent != nullptr && !detatched) {

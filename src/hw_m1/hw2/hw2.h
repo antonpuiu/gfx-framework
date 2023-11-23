@@ -36,5 +36,7 @@ namespace m1
         gfxc::ImplementedCameraInput* cameraInput;
 
         std::vector<Object3D*> objects;
+
+        Tank* tank;
     };
 } // namespace m1

@@ -28,49 +28,35 @@ namespace m1
     class Plane : public Object3D {
     public:
         virtual void InitObject() override;
-        virtual Plane* Create() override;
-        virtual Plane* Clone() override;
     };
 
     class TankBody : public Object3D {
     public:
         virtual void InitObject() override;
-        virtual TankBody* Create() override;
-        virtual TankBody* Clone() override;
     };
 
     class TankTurret : public Object3D {
     public:
         virtual void InitObject() override;
-        virtual TankTurret* Create() override;
-        virtual TankTurret* Clone() override;
     };
 
     class TankProjectile : public Object3D {
     public:
         virtual void InitObject() override;
-        virtual TankProjectile* Create() override;
-        virtual TankProjectile* Clone() override;
     };
 
     class TankGun : public Object3D {
     public:
         virtual void InitObject() override;
-        virtual TankGun* Create() override;
-        virtual TankGun* Clone() override;
     };
 
     class TankTracks : public Object3D {
     public:
         virtual void InitObject() override;
-        virtual TankTracks* Create() override;
-        virtual TankTracks* Clone() override;
     };
 
     class Tank : public Object3D {
     public:
         virtual void InitObject() override;
-        virtual Tank* Create() override;
-        virtual Tank* Clone() override;
     };
 }

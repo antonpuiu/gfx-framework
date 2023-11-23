@@ -118,8 +118,10 @@ void gfxc::ImplementedCameraInput::OnKeyPress(int key, int mods)
 void gfxc::ImplementedCameraInput::OnMouseMove(int mouseX, int mouseY, int deltaX, int deltaY)
 {
     if (window->MouseHold(GLFW_MOUSE_BUTTON_RIGHT)) {
-        camera->RotateFirstPerson_OY(-(float)deltaX);
-        camera->RotateFirstPerson_OX(-(float)deltaY);
+        float sensivityOX = 0.001f;
+        float sensivityOY = 0.001f;
+        camera->RotateFirstPerson_OY(-sensivityOX * (float)deltaX);
+        camera->RotateFirstPerson_OX(-sensivityOY * (float)deltaY);
     }
 }
 

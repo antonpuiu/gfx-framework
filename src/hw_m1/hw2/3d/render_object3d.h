@@ -20,8 +20,6 @@ namespace m1
 
     public:
         virtual void Init() = 0;
-        virtual RenderObject3D* Create() = 0;
-        virtual RenderObject3D* Clone() = 0;
 
     protected:
         Mesh* mesh;
@@ -32,23 +30,36 @@ namespace m1
     public:
         Cube();
         Cube(glm::vec3 color);
-        Cube(Cube&);
 
     public:
-        virtual RenderObject3D* Create() override;
-        virtual RenderObject3D* Clone() override;
         virtual void Init() override;
     };
 
-    class Cylinder : public RenderObject3D {
+    class CylinderBase : public RenderObject3D {
     public:
-        Cylinder();
-        Cylinder(glm::vec3 color);
-        Cylinder(Cylinder&);
+        CylinderBase();
+        CylinderBase(glm::vec3 color);
+
+    protected:
+        static inline int RESOLUTION = 250;
+        static inline float OFFSET = 0;
+    };
+
+    class CylinderCover : public CylinderBase {
+    public:
+        CylinderCover();
+        CylinderCover(glm::vec3 color);
 
     public:
-        virtual RenderObject3D* Create() override;
-        virtual RenderObject3D* Clone() override;
+        virtual void Init() override;
+    };
+
+    class CylinderBody : public CylinderBase {
+    public:
+        CylinderBody();
+        CylinderBody(glm::vec3 color);
+
+    public:
         virtual void Init() override;
     };
 
@@ -56,11 +67,11 @@ namespace m1
     public:
         Sphere();
         Sphere(glm::vec3 color);
-        Sphere(Sphere&);
 
     public:
-        virtual RenderObject3D* Create() override;
-        virtual RenderObject3D* Clone() override;
         virtual void Init() override;
+
+    private:
+        static inline int RESOLUTION = 50;
     };
 }
