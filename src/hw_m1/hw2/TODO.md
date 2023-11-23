@@ -23,6 +23,6 @@
     - [ ] Mișcarea inamicilor în scenă pe o traiectorie aleatoare 10p
     - [ ] Desenare clădiri 5p
     - [ ] Coliziuni 15p
-        - [ ] Tanc - [ ] clădire 10p
-        - [ ] Proiectil - [ ] clădire 5p
+        - [ ] Tanc - clădire 10p
+        - [ ] Proiectil - clădire 5p
 
