@@ -145,21 +145,21 @@ void Hw1::FrameStart()
         glViewport(0, 0, resolution.x, resolution.y);
     }
 
-    {
-        int lifesCount = 0;
+    // {
+    //     int lifesCount = 0;
 
-        for (int i = 0; i < lifes.size(); i++) {
-            if (!lifes[i]->enabled)
-                break;
+    //     for (int i = 0; i < lifes.size(); i++) {
+    //         if (!lifes[i]->enabled)
+    //             break;
 
-            lifesCount++;
-        }
+    //         lifesCount++;
+    //     }
 
-        if (lifesCount == 0) {
-            cout << "GAME OVER!" << endl;
-            window->Close();
-        }
-    }
+    //     if (lifesCount == 0) {
+    //         cout << "GAME OVER!" << endl;
+    //         window->Close();
+    //     }
+    // }
 }
 
 void Hw1::Update(float deltaTimeSeconds)
@@ -188,8 +188,7 @@ void Hw1::FrameEnd()
             }
 
             for (auto enemy : enemies) {
-                if (enemy->GetColor() == l->GetColor() &&
-                    enemy->GetPosition().y == spot->GetPosition().y &&
+                if (enemy->GetPosition().y == spot->GetPosition().y &&
                     (spot->GetPosition().x + l->GetScale().x) -
                             (enemy->GetPosition().x - enemy->GetScale().x) >=
                         0) {
