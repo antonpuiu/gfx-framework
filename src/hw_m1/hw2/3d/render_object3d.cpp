@@ -1,6 +1,9 @@
 #include "render_object3d.h"
+#include "object3d.h"
 #include "components/simple_scene.h"
 #include "core/gpu/vertex_format.h"
+#include <algorithm>
+#include <iostream>
 
 using namespace m1;
 
@@ -92,6 +95,168 @@ void RenderObject3D::SetColor(glm::vec3 color)
 Mesh* RenderObject3D::GetMesh()
 {
     return mesh;
+}
+
+bool RenderObject3D::CollisionTest(RenderObject3D* o1, RenderObject3D* o2)
+{
+    return false;
+}
+
+bool RenderObject3D::CollisionTest(Cube* o1, Cube* o2)
+{
+    glm::vec3 o1Pos = o1->GetGlobalPosition();
+    glm::vec3 o1Scl = o1->GetGlobalScale();
+    glm::vec3 o1Rot = o1->GetGlobalRotation();
+
+    glm::vec3 o2Pos = o2->GetGlobalPosition();
+    glm::vec3 o2Scl = o2->GetGlobalScale();
+    glm::vec3 o2Rot = o2->GetGlobalRotation();
+
+    auto o1Min = o1Pos - (o1Scl / glm::vec3(2.0, 2.0, 2.0));
+    auto o1Max = o1Pos + (o1Scl / glm::vec3(2.0, 2.0, 2.0));
+
+    auto o2Min = o2Pos - (o2Scl / glm::vec3(2.0, 2.0, 2.0));
+    auto o2Max = o2Pos + (o2Scl / glm::vec3(2.0, 2.0, 2.0));
+
+    if (o1Min.x <= o2Max.x && o1Max.x >= o2Min.x && o1Min.z <= o2Max.z && o1Max.z >= o2Min.z)
+        return true;
+
+    return false;
+}
+
+bool RenderObject3D::CollisionTest(Cube* o1, CylinderCover* o2)
+{
+    return false;
+}
+
+bool RenderObject3D::CollisionTest(Cube* o1, CylinderBody* o2)
+{
+    return false;
+}
+
+bool RenderObject3D::CollisionTest(Cube* o1, Sphere* o2)
+{
+    return false;
+}
+
+bool RenderObject3D::CollisionTest(CylinderCover* o1, CylinderCover* o2)
+{
+    return false;
+}
+
+bool RenderObject3D::CollisionTest(CylinderCover* o1, CylinderBody* o2)
+{
+    return false;
+}
+
+bool RenderObject3D::CollisionTest(CylinderCover* o1, Sphere* o2)
+{
+    return false;
+}
+
+bool RenderObject3D::CollisionTest(CylinderBody* o1, CylinderBody* o2)
+{
+    return false;
+}
+
+bool RenderObject3D::CollisionTest(CylinderBody* o1, Sphere* o2)
+{
+    return false;
+}
+
+bool RenderObject3D::CollisionTest(Sphere* o1, Sphere* o2)
+{
+    return false;
+}
+
+bool RenderObject3D::CollisionTest(Tank* tank, Walls* walls)
+{
+    glm::vec3 tankPos = tank->GetPosition();
+    glm::vec3 wallsScl = walls->GetGlobalScale();
+
+    float tankRadius = tank->GetTankRadius();
+
+    if (tankPos.x - tankRadius >= -wallsScl.x / 2.0 && tankPos.x + tankRadius <= wallsScl.x / 2.0 &&
+        tankPos.z - tankRadius >= -wallsScl.z / 2.0 && tankPos.z + tankRadius <= wallsScl.z / 2.0)
+        return false;
+
+    return true;
+}
+
+bool RenderObject3D::CollisionTest(Tank* tank, Building* building)
+{
+    glm::vec3 tankPos = tank->GetPosition();
+    float tankRadius = tank->GetTankRadius();
+
+    glm::vec3 buildingPos = building->GetPrimitives()[0]->GetGlobalPosition();
+    glm::vec3 buildingScl = building->GetPrimitives()[0]->GetGlobalScale();
+
+    auto buildingMin = buildingPos - (buildingScl / glm::vec3(2.0, 2.0, 2.0));
+    auto buildingMax = buildingPos + (buildingScl / glm::vec3(2.0, 2.0, 2.0));
+
+    if ((tankPos.x + tankRadius >= buildingMin.x && tankPos.x + tankRadius <= buildingMax.x &&
+         tankPos.z >= buildingMin.z && tankPos.z <= buildingMax.z))
+        return true;
+
+    if ((tankPos.x - tankRadius >= buildingMin.x && tankPos.x - tankRadius <= buildingMax.x &&
+         tankPos.z >= buildingMin.z && tankPos.z <= buildingMax.z))
+        return true;
+
+    if ((tankPos.z + tankRadius >= buildingMin.z && tankPos.z + tankRadius <= buildingMax.z &&
+         tankPos.x >= buildingMin.x && tankPos.x <= buildingMax.x))
+        return true;
+
+    if ((tankPos.z - tankRadius >= buildingMin.z && tankPos.z - tankRadius <= buildingMax.z &&
+         tankPos.x >= buildingMin.x && tankPos.x <= buildingMax.x))
+        return true;
+
+    return false;
+}
+
+bool RenderObject3D::CollisionTest(Tank* tank1, Tank* tank2)
+{
+    for (auto tank1Primitive : tank1->GetPrimitives())
+        for (auto tank2Primitive : tank2->GetPrimitives())
+            if (RenderObject3D::CollisionTest(tank1Primitive, tank2Primitive))
+                return true;
+
+    return false;
+}
+
+bool RenderObject3D::CollisionTest(TankProjectile* projectile, Walls* walls)
+{
+    glm::vec3 projectilePos = projectile->GetPosition();
+    glm::vec3 projectileScl = projectile->GetPrimitives()[0]->GetGlobalScale();
+    glm::vec3 wallsScl = walls->GetScale();
+
+    if (projectilePos.x - projectileScl.x >= -wallsScl.x / 2.0 &&
+        projectilePos.x + projectileScl.x <= wallsScl.x / 2.0 &&
+        projectilePos.z - projectileScl.z >= -wallsScl.z / 2.0 &&
+        projectilePos.z + projectileScl.z <= wallsScl.z / 2.0)
+        return false;
+
+    return true;
+}
+
+bool RenderObject3D::CollisionTest(TankProjectile* projectile, Building* building)
+{
+    glm::vec3 projectilePos = projectile->GetPosition();
+    glm::vec3 projectileScl = projectile->GetPrimitives()[0]->GetGlobalScale();
+
+    glm::vec3 buildingPos = building->GetPosition();
+    glm::vec3 buildingScl = building->GetScale();
+
+    return false;
+}
+
+bool RenderObject3D::CollisionTest(TankProjectile* projectile, Tank* tank)
+{
+    for (auto tankPrimitive : tank->GetPrimitives())
+        for (auto projectilePrimitive : projectile->GetPrimitives())
+            if (RenderObject3D::CollisionTest(tankPrimitive, projectilePrimitive))
+                return true;
+
+    return false;
 }
 
 void Cube::Init()

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "components/camera.h"
 #include "hw_m1/hw2/3d/render_object3d.h"
 #include "hw_m1/hw2/3d/scene_object3d.h"
 #include "hw_m1/hw2/3d/transform3d.h"
@@ -117,6 +118,7 @@ namespace m1
         void RotateTurret(float deg);
         void RotateGun(float deg);
         glm::vec3 GetGunRot();
+        float GetTankRadius();
 
         TankProjectile* LaunchProjectile();
 

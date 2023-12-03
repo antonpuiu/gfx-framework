@@ -18,14 +18,17 @@ namespace m1
         void SetPosition(glm::vec3 pos);
         virtual void AddPosition(glm::vec3 qty);
         glm::vec3 GetPosition();
+        glm::vec3 GetGlobalPosition();
 
         void SetScale(glm::vec3 scale);
         void AddScale(glm::vec3 qty);
         glm::vec3 GetScale();
+        glm::vec3 GetGlobalScale();
 
         void SetRotation(glm::vec3 rotation);
         virtual void AddRotation(glm::vec3 qty);
         glm::vec3 GetRotation();
+        glm::vec3 GetGlobalRotation();
 
         void AddChildren(Transform3D* children);
 

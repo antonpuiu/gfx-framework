@@ -1,6 +1,7 @@
 #include "hw_m1/hw2/3d/object3d.h"
 #include "core/gpu/vertex_format.h"
 #include "glm/gtx/quaternion.hpp"
+#include "hw_m1/hw2/3d/render_object3d.h"
 #include "hw_m1/hw2/3d/transform3d.h"
 #include "lab_m1/lab5/lab_camera.h"
 #include "utils/math_utils.h"
@@ -180,7 +181,7 @@ void TankProjectile::InitObject()
 
     primitives.push_back(sphere);
 
-    timeToLive = 0.5;
+    timeToLive = 2;
 }
 
 void TankGun::InitObject()
@@ -216,6 +217,15 @@ void Tank::RotateGun(float deg)
 glm::vec3 Tank::GetGunRot()
 {
     return turret->gun->GetRotation();
+}
+
+float Tank::GetTankRadius()
+{
+    Cube* body = static_cast<Cube*>(objects[2]->GetPrimitives()[0]);
+    glm::vec3 bodyPos = body->GetGlobalPosition();
+    glm::vec3 bodyScl = body->GetGlobalScale();
+
+    return bodyPos.z + bodyScl.z / 2 - pos.z;
 }
 
 TankProjectile* Tank::LaunchProjectile()
@@ -268,7 +278,7 @@ void Tank::UpdateCamera()
     if (camera == nullptr)
         return;
 
-    camera->Set(pos - glm::vec3(0, -0.45, 0.5), pos, glm::vec3(0, 1, 0));
+    camera->Set(pos + glm::vec3(0, 0.45, -0.5), pos, glm::vec3(0, 1, 0));
     camera->distanceToTarget = abs(glm::distance(camera->position, pos));
     camera->RotateThirdPerson_OY((rotation.y + turret->rotation.y) * TO_RADIANS);
     camera->RotateThirdPerson_OX(-(turret->gun->GetRotation().x - 90) * TO_RADIANS);

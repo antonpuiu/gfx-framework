@@ -106,6 +106,25 @@ glm::vec3 Transform3D::GetPosition()
     return pos;
 }
 
+glm::vec3 Transform3D::GetGlobalPosition()
+{
+    if (detatched)
+        return posDetatched;
+
+    if (!parent)
+        return pos;
+
+    auto prt = parent;
+    glm::vec3 result = pos;
+
+    while (prt != nullptr) {
+        result += prt->GetPosition();
+        prt = prt->parent;
+    }
+
+    return result;
+}
+
 void Transform3D::SetScale(glm::vec3 scale)
 {
     if (detatched)
@@ -134,6 +153,25 @@ glm::vec3 Transform3D::GetScale()
     return scale;
 }
 
+glm::vec3 Transform3D::GetGlobalScale()
+{
+    if (detatched)
+        return scaleDetatched;
+
+    if (!parent)
+        return scale;
+
+    auto prt = parent;
+    glm::vec3 result = scale;
+
+    while (prt != nullptr) {
+        result *= prt->GetScale();
+        prt = prt->parent;
+    }
+
+    return result;
+}
+
 void Transform3D::SetRotation(glm::vec3 rotation)
 {
     if (detatched)
@@ -160,6 +198,25 @@ glm::vec3 Transform3D::GetRotation()
         return rotationDetatched;
 
     return rotation;
+}
+
+glm::vec3 Transform3D::GetGlobalRotation()
+{
+    if (detatched)
+        return rotationDetatched;
+
+    if (!parent)
+        return rotation;
+
+    auto prt = parent;
+    glm::vec3 result = rotation;
+
+    while (prt != nullptr) {
+        result += prt->GetRotation();
+        prt = prt->parent;
+    }
+
+    return result;
 }
 
 void Transform3D::AddChildren(Transform3D* children)

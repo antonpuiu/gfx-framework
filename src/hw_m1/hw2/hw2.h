@@ -5,6 +5,8 @@
 #include "lab_m1/lab5/lab_camera.h"
 #include "hw_m1/hw2/3d/object3d.h"
 
+#include <random>
+
 namespace m1
 {
     class Hw2 : public gfxc::SimpleScene {
@@ -37,8 +39,16 @@ namespace m1
         std::list<Object3D*> objects;
         std::list<Tank*> enemies;
         std::list<TankProjectile*> projectiles;
-        std::list<Building*> buildings;
+        std::vector<Building*> buildings;
 
         Tank* tank;
+        Walls* walls;
+
+        static inline std::random_device rd = std::random_device();
+        static inline std::default_random_engine engine = std::default_random_engine(Hw2::rd());
+        static inline std::uniform_real_distribution<float> count =
+            std::uniform_real_distribution<float>(1, 10);
+
+        float timeLeft;
     };
 } // namespace m1

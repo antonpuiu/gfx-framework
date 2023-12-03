@@ -5,6 +5,16 @@
 
 namespace m1
 {
+    class Cube;
+    class CylinderCover;
+    class CylinderBody;
+    class Sphere;
+
+    class Tank;
+    class TankProjectile;
+    class Walls;
+    class Building;
+
     class RenderObject3D : public Transform3D {
     public:
         RenderObject3D();
@@ -14,6 +24,31 @@ namespace m1
         glm::vec3 GetColor();
         void SetColor(glm::vec3 color);
         Mesh* GetMesh();
+
+    public:
+        static bool CollisionTest(RenderObject3D* o1, RenderObject3D* o2);
+
+        static bool CollisionTest(Cube* o1, Cube* o2);
+        static bool CollisionTest(Cube* o1, CylinderCover* o2);
+        static bool CollisionTest(Cube* o1, CylinderBody* o2);
+        static bool CollisionTest(Cube* o1, Sphere* o2);
+
+        static bool CollisionTest(CylinderCover* o1, CylinderCover* o2);
+        static bool CollisionTest(CylinderCover* o1, CylinderBody* o2);
+        static bool CollisionTest(CylinderCover* o1, Sphere* o2);
+
+        static bool CollisionTest(CylinderBody* o1, CylinderBody* o2);
+        static bool CollisionTest(CylinderBody* o1, Sphere* o2);
+
+        static bool CollisionTest(Sphere* o1, Sphere* o2);
+
+        static bool CollisionTest(Tank* tank, Walls* walls);
+        static bool CollisionTest(Tank* tank, Building* building);
+        static bool CollisionTest(Tank* tank1, Tank* tank2);
+
+        static bool CollisionTest(TankProjectile* projectile, Walls* walls);
+        static bool CollisionTest(TankProjectile* projectile, Building* building);
+        static bool CollisionTest(TankProjectile* projectile, Tank* tank);
 
     public:
         virtual ~RenderObject3D();

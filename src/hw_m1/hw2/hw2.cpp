@@ -2,7 +2,9 @@
 
 #include "GLFW/glfw3.h"
 #include "core/gpu/mesh.h"
+#include "core/gpu/vertex_format.h"
 #include "hw_m1/hw2/3d/object3d.h"
+#include "hw_m1/hw2/3d/render_object3d.h"
 #include "hw_m1/hw2/3d/scene_object3d.h"
 #include "lab_m1/lab1/lab1.h"
 
@@ -25,7 +27,7 @@ void Hw2::Init()
 {
     {
         camera = new implemented::Camera();
-        camera->Set(glm::vec3(0, 1.5, -2.0), glm::vec3(0, 1, 0), glm::vec3(0, 1, 0));
+        camera->Set(glm::vec3(0, 1, -2), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
     }
 
     {
@@ -42,13 +44,13 @@ void Hw2::Init()
 
     {
         Plane* plane = new Plane();
-        Walls* walls = new Walls();
+        walls = new Walls();
 
         plane->SetScale({ 90, 0, 90 });
         plane->SetPosition({ 0, 0, 0 });
 
         walls->SetScale({ 90, 90, 90 });
-        walls->SetPosition({ 0, 0, 0 });
+        walls->SetPosition({ 0, 45, 0 });
 
         objects.push_back(plane);
         objects.push_back(walls);
@@ -87,6 +89,11 @@ void Hw2::Init()
         for (auto object : objects)
             object->Init();
     }
+
+    {
+        timeLeft = Hw2::count(Hw2::engine) * 60.0;
+        cout << "TimeLeft: " << timeLeft << endl;
+    }
 }
 
 void Hw2::FrameStart()
@@ -96,6 +103,35 @@ void Hw2::FrameStart()
         glClearColor(0, 0, 0, 1);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glViewport(0, 0, resolution.x, resolution.y);
+    }
+
+    // {
+    //     // CUBE - CUBE collision test
+    //     int n = buildings.size();
+
+    //     for (int i = 0; i < n - 1; i++) {
+    //         Cube* b1 = static_cast<Cube*>(buildings[i]->GetPrimitives()[0]);
+
+    //         for (int j = i + 1; j < n; j++) {
+    //             Cube* b2 = static_cast<Cube*>(buildings[j]->GetPrimitives()[0]);
+
+    //             if (RenderObject3D::CollisionTest(b1, b2)) {
+    //                 b1->SetColor(VertexColor::BLACK);
+    //                 b2->SetColor(VertexColor::BLACK);
+    //             }
+    //         }
+    //     }
+    // }
+
+    {
+        for (auto projectile : projectiles) {
+            if (RenderObject3D::CollisionTest(projectile, walls))
+                projectile->state = INACTIVE;
+
+            for (auto building : buildings)
+                if (RenderObject3D::CollisionTest(projectile, building))
+                    projectile->state = INACTIVE;
+        }
     }
 
     {
@@ -124,6 +160,13 @@ void Hw2::FrameStart()
                 it_p++;
         }
     }
+
+    {
+        if (timeLeft <= 0) {
+            cout << "Game over!" << endl;
+            window->Close();
+        }
+    }
 }
 
 void Hw2::Update(float deltaTimeSeconds)
@@ -131,6 +174,10 @@ void Hw2::Update(float deltaTimeSeconds)
     {
         for (auto projectile : projectiles)
             projectile->Update(deltaTimeSeconds);
+    }
+
+    {
+        timeLeft -= deltaTimeSeconds;
     }
 }
 
@@ -181,24 +228,80 @@ void Hw2::OnInputUpdate(float deltaTime, int mods)
         {
             // Body
             if (window->KeyHold(GLFW_KEY_W)) {
-                if ((mods & GLFW_MOD_SHIFT) != 0)
+                bool moveBack = false;
+
+                if ((mods & GLFW_MOD_SHIFT) != 0) {
                     tank->AddPosition(
                         { boost * deltaTime * sin(tank->GetRotation().y * TO_RADIANS), 0,
                           boost * deltaTime * cos(tank->GetRotation().y * TO_RADIANS) });
-                else
+
+                    for (auto building : buildings) {
+                        if (RenderObject3D::CollisionTest(tank, building)) {
+                            moveBack = true;
+                            break;
+                        }
+                    }
+
+                    if (RenderObject3D::CollisionTest(tank, walls) || moveBack)
+                        tank->AddPosition(
+                            { -boost * deltaTime * sin(tank->GetRotation().y * TO_RADIANS), 0,
+                              -boost * deltaTime * cos(tank->GetRotation().y * TO_RADIANS) });
+                } else {
+                    bool moveBack = false;
+
                     tank->AddPosition({ 10 * deltaTime * sin(tank->GetRotation().y * TO_RADIANS), 0,
                                         10 * deltaTime * cos(tank->GetRotation().y * TO_RADIANS) });
+
+                    for (auto building : buildings) {
+                        if (RenderObject3D::CollisionTest(tank, building)) {
+                            moveBack = true;
+                            break;
+                        }
+                    }
+
+                    if (RenderObject3D::CollisionTest(tank, walls) || moveBack)
+                        tank->AddPosition(
+                            { -10 * deltaTime * sin(tank->GetRotation().y * TO_RADIANS), 0,
+                              -10 * deltaTime * cos(tank->GetRotation().y * TO_RADIANS) });
+                }
             }
 
             if (window->KeyHold(GLFW_KEY_S)) {
-                if ((mods & GLFW_MOD_SHIFT) != 0)
+                bool moveBack = false;
+
+                if ((mods & GLFW_MOD_SHIFT) != 0) {
                     tank->AddPosition(
                         { boost * -deltaTime * sin(tank->GetRotation().y * TO_RADIANS), 0,
                           boost * -deltaTime * cos(tank->GetRotation().y * TO_RADIANS) });
-                else
+
+                    for (auto building : buildings) {
+                        if (RenderObject3D::CollisionTest(tank, building)) {
+                            moveBack = true;
+                            break;
+                        }
+                    }
+
+                    if (RenderObject3D::CollisionTest(tank, walls) || moveBack)
+                        tank->AddPosition(
+                            { -boost * -deltaTime * sin(tank->GetRotation().y * TO_RADIANS), 0,
+                              -boost * -deltaTime * cos(tank->GetRotation().y * TO_RADIANS) });
+                } else {
                     tank->AddPosition(
                         { 10 * -deltaTime * sin(tank->GetRotation().y * TO_RADIANS), 0,
                           10 * -deltaTime * cos(tank->GetRotation().y * TO_RADIANS) });
+
+                    for (auto building : buildings) {
+                        if (RenderObject3D::CollisionTest(tank, building)) {
+                            moveBack = true;
+                            break;
+                        }
+                    }
+
+                    if (RenderObject3D::CollisionTest(tank, walls) || moveBack)
+                        tank->AddPosition(
+                            { -10 * -deltaTime * sin(tank->GetRotation().y * TO_RADIANS), 0,
+                              -10 * -deltaTime * cos(tank->GetRotation().y * TO_RADIANS) });
+                }
             }
 
             if (window->KeyHold(GLFW_KEY_A)) {
