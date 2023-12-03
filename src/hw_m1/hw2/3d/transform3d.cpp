@@ -182,25 +182,36 @@ void Transform3D::AddChildren(Transform3D* children)
         childrens.push_back(children);
 }
 
-void Transform3D::AttatchToParent()
-{
-    detatched = false;
-    dirtyFlag = true;
-}
-
 void Transform3D::AttatchToParent(Transform3D* parent)
 {
     this->parent = parent;
+    parent->childrens.push_back(this);
     detatched = false;
     dirtyFlag = true;
 }
 
 void Transform3D::DetatchFromParent()
 {
-    scaleDetatched = parent->GetScale() + scale;
-    posDetatched = parent->GetPosition() + pos;
-    rotationDetatched = parent->GetRotation() + rotationDetatched;
+    for (auto it = parent->childrens.begin(); it != parent->childrens.end(); it++) {
+        if (*it == this) {
+            parent->childrens.erase(it);
+            break;
+        }
+    }
+
+    auto prt = parent;
+
+    posDetatched = pos;
+    scaleDetatched = prt->GetScale() + scale;
+    rotationDetatched = rotation;
+
+    while (prt != nullptr) {
+        posDetatched += prt->GetPosition();
+        rotationDetatched += prt->GetRotation();
+        prt = prt->parent;
+    }
 
     detatched = true;
     dirtyFlag = true;
+    parent = nullptr;
 }

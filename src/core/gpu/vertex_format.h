@@ -2,6 +2,8 @@
 
 #include "utils/glm_utils.h"
 
+#include <vector>
+
 struct VertexFormat {
     VertexFormat(glm::vec3 position, glm::vec3 color = glm::vec3(1),
                  glm::vec3 normal = glm::vec3(0, 1, 0), glm::vec2 text_coord = glm::vec2(0))
@@ -37,4 +39,6 @@ namespace VertexColor
     extern glm::vec3 YELLOW;
     extern glm::vec3 ORANGE;
     extern glm::vec3 CYAN;
+
+    extern std::vector<glm::vec3> colors;
 };

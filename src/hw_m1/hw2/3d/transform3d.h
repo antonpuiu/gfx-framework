@@ -16,7 +16,7 @@ namespace m1
         void ComputeModelMatrix();
 
         void SetPosition(glm::vec3 pos);
-        void AddPosition(glm::vec3 qty);
+        virtual void AddPosition(glm::vec3 qty);
         glm::vec3 GetPosition();
 
         void SetScale(glm::vec3 scale);
@@ -24,12 +24,11 @@ namespace m1
         glm::vec3 GetScale();
 
         void SetRotation(glm::vec3 rotation);
-        void AddRotation(glm::vec3 qty);
+        virtual void AddRotation(glm::vec3 qty);
         glm::vec3 GetRotation();
 
         void AddChildren(Transform3D* children);
 
-        void AttatchToParent();
         void AttatchToParent(Transform3D* parent);
         void DetatchFromParent();
 

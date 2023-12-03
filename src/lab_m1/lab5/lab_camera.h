@@ -46,20 +46,20 @@ namespace implemented
             // height. For example, if you rotate your head up/down, and then
             // walk forward, then you will still keep the same relative
             // distance (height) to the ground!
-            glm::vec3 dir = glm::normalize(glm::vec3(forward.x, 0, forward.z));
-            position += dir * distance;
+            glm::vec3 dir = glm::normalize(glm::vec3(0, 0, forward.z));
+            position += glm::normalize(dir * distance);
         }
 
         void MoveUp(float distance)
         {
-            glm::vec3 dir = glm::normalize(glm::vec3(0, up.y, up.z));
-            position += dir * distance;
+            glm::vec3 dir = glm::normalize(glm::vec3(0, up.y, 0));
+            position += glm::normalize(dir * distance);
         }
 
         void MoveRight(float distance)
         {
-            glm::vec3 dir = glm::normalize(glm::vec3(right.x, 0, right.z));
-            position += dir * distance;
+            glm::vec3 dir = glm::normalize(glm::vec3(right.x, 0, 0));
+            position += glm::normalize(dir * distance);
         }
 
         void TranslateForward(float distance)

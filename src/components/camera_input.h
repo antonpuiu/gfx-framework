@@ -18,17 +18,4 @@ namespace gfxc
     public:
         Camera* camera;
     };
-
-    class ImplementedCameraInput : public InputController {
-    public:
-        explicit ImplementedCameraInput(implemented::Camera* camera);
-        void OnInputUpdate(float deltaTime, int mods) override;
-        void OnKeyPress(int key, int mods) override;
-        void OnMouseMove(int mouseX, int mouseY, int deltaX, int deltaY) override;
-        void OnMouseBtnPress(int mouseX, int mouseY, int button, int mods) override;
-        void OnMouseBtnRelease(int mouseX, int mouseY, int button, int mods) override;
-
-    public:
-        implemented::Camera* camera;
-    };
 }

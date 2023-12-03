@@ -33,9 +33,11 @@ namespace m1
 
     private:
         implemented::Camera* camera;
-        gfxc::ImplementedCameraInput* cameraInput;
 
-        std::vector<Object3D*> objects;
+        std::list<Object3D*> objects;
+        std::list<Tank*> enemies;
+        std::list<TankProjectile*> projectiles;
+        std::list<Building*> buildings;
 
         Tank* tank;
     };
