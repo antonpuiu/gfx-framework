@@ -4,9 +4,9 @@
     - [x] Control tanc 50p
         - [x] Deplasare tanc prin tastele WASD 35p
         - [x] Tras cu tunul 15p
-    - [ ] Dispariția proiectilului după un timp sau la coliziune cu un inamic 10p
+    - [x] Dispariția proiectilului după un timp sau la coliziune cu un inamic 10p
     - [ ] Mișcarea inamicilor în scenă pe o traiectorie definită 15p
-    - [ ] Sfârșitul jocului după cel puțin un minut 5p
+    - [x] Sfârșitul jocului după cel puțin un minut 5p
     - [ ] Coliziuni 25p
         - [ ] Proiectil - inamic 15p
         - [ ] Tanc - tanc 10p
@@ -23,6 +23,6 @@
     - [ ] Mișcarea inamicilor în scenă pe o traiectorie aleatoare 10p
     - [x] Desenare clădiri 5p
     - [ ] Coliziuni 15p
-        - [ ] Tanc - clădire 10p
+        - [x] Tanc - clădire 10p
         - [ ] Proiectil - clădire 5p
 
