@@ -43,6 +43,18 @@ void Hw2::Init()
     }
 
     {
+        Shader* shader = new Shader("HwTankShader");
+        shader->AddShader(PATH_JOIN(window->props.selfDir, SOURCE_PATH::HW_M1, "hw2", "shaders",
+                                    "TankVertexShader.glsl"),
+                          GL_VERTEX_SHADER);
+        shader->AddShader(PATH_JOIN(window->props.selfDir, SOURCE_PATH::HW_M1, "hw2", "shaders",
+                                    "TankFragmentShader.glsl"),
+                          GL_FRAGMENT_SHADER);
+        shader->CreateAndLink();
+        shaders[shader->GetName()] = shader;
+    }
+
+    {
         Plane* plane = new Plane();
         walls = new Walls();
 
@@ -64,11 +76,12 @@ void Hw2::Init()
 
         for (int i = 0; i < count; i++) {
             Tank* enemy = new Tank();
+
             enemy->SetPosition({ Tank::position(Tank::engine), 0, Tank::position(Tank::engine) });
             enemy->SetRotation({ 0, Tank::rot(Tank::engine), 0 });
+            enemy->Init();
 
             enemies.push_back(enemy);
-            objects.push_back(enemy);
         }
     }
 
@@ -105,26 +118,15 @@ void Hw2::FrameStart()
         glViewport(0, 0, resolution.x, resolution.y);
     }
 
-    // {
-    //     // CUBE - CUBE collision test
-    //     int n = buildings.size();
-
-    //     for (int i = 0; i < n - 1; i++) {
-    //         Cube* b1 = static_cast<Cube*>(buildings[i]->GetPrimitives()[0]);
-
-    //         for (int j = i + 1; j < n; j++) {
-    //             Cube* b2 = static_cast<Cube*>(buildings[j]->GetPrimitives()[0]);
-
-    //             if (RenderObject3D::CollisionTest(b1, b2)) {
-    //                 b1->SetColor(VertexColor::BLACK);
-    //                 b2->SetColor(VertexColor::BLACK);
-    //             }
-    //         }
-    //     }
-    // }
-
     {
         for (auto projectile : projectiles) {
+            for (auto enemy : enemies) {
+                if (RenderObject3D::CollisionTest(projectile, enemy)) {
+                    projectile->state = INACTIVE;
+                    enemy->Strike();
+                }
+            }
+
             if (RenderObject3D::CollisionTest(projectile, walls))
                 projectile->state = INACTIVE;
 
@@ -161,6 +163,18 @@ void Hw2::FrameStart()
         }
     }
 
+    for (auto it_e = enemies.begin(); it_e != enemies.end();) {
+        auto enemy = *it_e;
+
+        if (enemy->state != INACTIVE) {
+            it_e++;
+            continue;
+        }
+
+        it_e = enemies.erase(it_e);
+        delete enemy;
+    }
+
     {
         if (timeLeft <= 0) {
             cout << "Game over!" << endl;
@@ -172,8 +186,41 @@ void Hw2::FrameStart()
 void Hw2::Update(float deltaTimeSeconds)
 {
     {
+        tank->Update(deltaTimeSeconds);
+    }
+
+    {
         for (auto projectile : projectiles)
             projectile->Update(deltaTimeSeconds);
+    }
+
+    {
+        for (auto enemy : enemies) {
+            enemy->Update(deltaTimeSeconds);
+
+            bool moveBack = false;
+
+            enemy->AddPosition({ deltaTimeSeconds * sin(enemy->GetRotation().y * TO_RADIANS), 0,
+                                 deltaTimeSeconds * cos(enemy->GetRotation().y * TO_RADIANS) });
+
+            for (auto building : buildings) {
+                if (RenderObject3D::CollisionTest(enemy, building)) {
+                    moveBack = true;
+                    break;
+                }
+            }
+
+            if (RenderObject3D::CollisionTest(tank, enemy) ||
+                RenderObject3D::CollisionTest(enemy, walls) || moveBack) {
+                enemy->AddPosition(
+                    { -deltaTimeSeconds * sin(enemy->GetRotation().y * TO_RADIANS), 0,
+                      -deltaTimeSeconds * cos(enemy->GetRotation().y * TO_RADIANS) });
+                if (enemy->GetRotation().y > 0)
+                    enemy->AddRotation({ 0, 500 * deltaTimeSeconds, 0 });
+                else
+                    enemy->AddRotation({ 0, 500 * -deltaTimeSeconds, 0 });
+            }
+        }
     }
 
     {
@@ -187,6 +234,11 @@ void Hw2::FrameEnd()
         for (auto primitive : object->GetPrimitives())
             RenderSimpleMesh(primitive->GetMesh(), shaders["HwShader"], primitive->GetModelMatrix(),
                              primitive->GetColor());
+
+    for (auto enemy : enemies)
+        for (auto primitive : enemy->GetPrimitives())
+            RenderEnemyMesh(primitive->GetMesh(), shaders["HwTankShader"],
+                            primitive->GetModelMatrix(), primitive->GetColor(), enemy->GetTankHP());
 }
 
 void Hw2::RenderSimpleMesh(Mesh* mesh, Shader* shader, const glm::mat4& modelMatrix,
@@ -218,6 +270,38 @@ void Hw2::RenderSimpleMesh(Mesh* mesh, Shader* shader, const glm::mat4& modelMat
     glDrawElements(mesh->GetDrawMode(), static_cast<int>(mesh->indices.size()), GL_UNSIGNED_INT, 0);
 }
 
+void Hw2::RenderEnemyMesh(Mesh* mesh, Shader* shader, const glm::mat4& modelMatrix, glm::vec3 color,
+                          float hp)
+{
+    if (!mesh || !shader || !shader->program)
+        return;
+
+    glUseProgram(shader->program);
+
+    {
+        int modelLocation = glGetUniformLocation(shader->program, "Model");
+        glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(modelMatrix));
+
+        int viewLocation = glGetUniformLocation(shader->program, "View");
+        glm::mat4 viewMatrix = camera->GetViewMatrix();
+        glUniformMatrix4fv(viewLocation, 1, GL_FALSE, glm::value_ptr(viewMatrix));
+
+        int projLocation = glGetUniformLocation(shader->program, "Projection");
+        glm::mat4 projectionMatrix = camera->GetProjectionMatrix();
+        glUniformMatrix4fv(projLocation, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
+
+        int colorLocation = glGetUniformLocation(shader->program, "object_color");
+        glUniform3fv(colorLocation, 1, glm::value_ptr(color));
+
+        int hpLocation = glGetUniformLocation(shader->program, "hp");
+        glUniform1f(hpLocation, hp);
+    }
+
+    // Draw the object
+    glBindVertexArray(mesh->GetBuffers()->m_VAO);
+    glDrawElements(mesh->GetDrawMode(), static_cast<int>(mesh->indices.size()), GL_UNSIGNED_INT, 0);
+}
+
 void Hw2::OnInputUpdate(float deltaTime, int mods)
 {
     {
@@ -242,6 +326,13 @@ void Hw2::OnInputUpdate(float deltaTime, int mods)
                         }
                     }
 
+                    for (auto enemy : enemies) {
+                        if (RenderObject3D::CollisionTest(tank, enemy)) {
+                            moveBack = true;
+                            break;
+                        }
+                    }
+
                     if (RenderObject3D::CollisionTest(tank, walls) || moveBack)
                         tank->AddPosition(
                             { -boost * deltaTime * sin(tank->GetRotation().y * TO_RADIANS), 0,
@@ -254,6 +345,13 @@ void Hw2::OnInputUpdate(float deltaTime, int mods)
 
                     for (auto building : buildings) {
                         if (RenderObject3D::CollisionTest(tank, building)) {
+                            moveBack = true;
+                            break;
+                        }
+                    }
+
+                    for (auto enemy : enemies) {
+                        if (RenderObject3D::CollisionTest(tank, enemy)) {
                             moveBack = true;
                             break;
                         }
@@ -281,6 +379,13 @@ void Hw2::OnInputUpdate(float deltaTime, int mods)
                         }
                     }
 
+                    for (auto enemy : enemies) {
+                        if (RenderObject3D::CollisionTest(tank, enemy)) {
+                            moveBack = true;
+                            break;
+                        }
+                    }
+
                     if (RenderObject3D::CollisionTest(tank, walls) || moveBack)
                         tank->AddPosition(
                             { -boost * -deltaTime * sin(tank->GetRotation().y * TO_RADIANS), 0,
@@ -292,6 +397,13 @@ void Hw2::OnInputUpdate(float deltaTime, int mods)
 
                     for (auto building : buildings) {
                         if (RenderObject3D::CollisionTest(tank, building)) {
+                            moveBack = true;
+                            break;
+                        }
+                    }
+
+                    for (auto enemy : enemies) {
+                        if (RenderObject3D::CollisionTest(tank, enemy)) {
                             moveBack = true;
                             break;
                         }
@@ -387,6 +499,9 @@ void Hw2::OnMouseBtnRelease(int mouseX, int mouseY, int button, int mods)
     {
         if (button == 1) {
             TankProjectile* projectile = tank->LaunchProjectile();
+
+            if (projectile == nullptr)
+                return;
 
             projectile->Init();
             objects.push_back(projectile);

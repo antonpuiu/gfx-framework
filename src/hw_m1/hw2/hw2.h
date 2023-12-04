@@ -23,6 +23,8 @@ namespace m1
 
         void RenderSimpleMesh(Mesh* mesh, Shader* shader, const glm::mat4& modelMatrix,
                               glm::vec3 color = VertexColor::WHITE);
+        void RenderEnemyMesh(Mesh* mesh, Shader* shader, const glm::mat4& modelMatrix,
+                             glm::vec3 color, float hp);
 
         void OnInputUpdate(float deltaTime, int mods) override;
         void OnKeyPress(int key, int mods) override;

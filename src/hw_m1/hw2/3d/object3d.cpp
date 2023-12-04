@@ -34,6 +34,8 @@ Tank::Tank()
 Tank::Tank(implemented::Camera* camera)
     : Object3D()
     , camera(camera)
+    , hp(100)
+    , timeout(0.0)
 {
     Tank::instances.push_back(this);
 }
@@ -228,13 +230,28 @@ float Tank::GetTankRadius()
     return bodyPos.z + bodyScl.z / 2 - pos.z;
 }
 
+float Tank::GetTankHP()
+{
+    return hp;
+}
+
+void Tank::Strike()
+{
+    hp -= 15;
+}
+
 TankProjectile* Tank::LaunchProjectile()
 {
+    if (timeout > 0)
+        return nullptr;
+
     TankProjectile* projectile = new TankProjectile(this);
 
     projectile->AttatchToParent(turret->gun);
     projectile->DetatchFromParent();
     projectile->state = LAUNCHED;
+
+    timeout = 1.0;
 
     return projectile;
 }
@@ -253,6 +270,19 @@ void Tank::AddRotation(glm::vec3 qty)
 
 void Tank::Update(float deltaTimeSeconds)
 {
+    if (hp <= 0)
+        state = INACTIVE;
+
+    if (timeout > 0)
+        timeout -= deltaTimeSeconds;
+
+    switch (state) {
+    case ACTIVE:
+    case LAUNCHED:
+    case STOPPING:
+    case INACTIVE:
+        break;
+    }
 }
 
 void Tank::InitObject()

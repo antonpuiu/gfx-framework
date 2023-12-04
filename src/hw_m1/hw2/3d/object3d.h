@@ -119,6 +119,9 @@ namespace m1
         void RotateGun(float deg);
         glm::vec3 GetGunRot();
         float GetTankRadius();
+        float GetTankHP();
+
+        void Strike();
 
         TankProjectile* LaunchProjectile();
 
@@ -139,7 +142,7 @@ namespace m1
     public:
         static inline std::default_random_engine engine = std::default_random_engine(Tank::rd());
         static inline std::uniform_int_distribution<int> count =
-            std::uniform_int_distribution<int>(3, 10);
+            std::uniform_int_distribution<int>(10, 80);
         static inline std::uniform_real_distribution<float>
             position = std::uniform_real_distribution<float>(-40, 40),
             rot = std::uniform_real_distribution<float>(0, 360);
@@ -147,5 +150,7 @@ namespace m1
     private:
         TankTurret* turret;
         implemented::Camera* camera;
+        int hp;
+        float timeout;
     };
 }

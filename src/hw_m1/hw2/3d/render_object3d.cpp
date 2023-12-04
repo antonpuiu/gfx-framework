@@ -102,73 +102,6 @@ bool RenderObject3D::CollisionTest(RenderObject3D* o1, RenderObject3D* o2)
     return false;
 }
 
-bool RenderObject3D::CollisionTest(Cube* o1, Cube* o2)
-{
-    glm::vec3 o1Pos = o1->GetGlobalPosition();
-    glm::vec3 o1Scl = o1->GetGlobalScale();
-    glm::vec3 o1Rot = o1->GetGlobalRotation();
-
-    glm::vec3 o2Pos = o2->GetGlobalPosition();
-    glm::vec3 o2Scl = o2->GetGlobalScale();
-    glm::vec3 o2Rot = o2->GetGlobalRotation();
-
-    auto o1Min = o1Pos - (o1Scl / glm::vec3(2.0, 2.0, 2.0));
-    auto o1Max = o1Pos + (o1Scl / glm::vec3(2.0, 2.0, 2.0));
-
-    auto o2Min = o2Pos - (o2Scl / glm::vec3(2.0, 2.0, 2.0));
-    auto o2Max = o2Pos + (o2Scl / glm::vec3(2.0, 2.0, 2.0));
-
-    if (o1Min.x <= o2Max.x && o1Max.x >= o2Min.x && o1Min.z <= o2Max.z && o1Max.z >= o2Min.z)
-        return true;
-
-    return false;
-}
-
-bool RenderObject3D::CollisionTest(Cube* o1, CylinderCover* o2)
-{
-    return false;
-}
-
-bool RenderObject3D::CollisionTest(Cube* o1, CylinderBody* o2)
-{
-    return false;
-}
-
-bool RenderObject3D::CollisionTest(Cube* o1, Sphere* o2)
-{
-    return false;
-}
-
-bool RenderObject3D::CollisionTest(CylinderCover* o1, CylinderCover* o2)
-{
-    return false;
-}
-
-bool RenderObject3D::CollisionTest(CylinderCover* o1, CylinderBody* o2)
-{
-    return false;
-}
-
-bool RenderObject3D::CollisionTest(CylinderCover* o1, Sphere* o2)
-{
-    return false;
-}
-
-bool RenderObject3D::CollisionTest(CylinderBody* o1, CylinderBody* o2)
-{
-    return false;
-}
-
-bool RenderObject3D::CollisionTest(CylinderBody* o1, Sphere* o2)
-{
-    return false;
-}
-
-bool RenderObject3D::CollisionTest(Sphere* o1, Sphere* o2)
-{
-    return false;
-}
-
 bool RenderObject3D::CollisionTest(Tank* tank, Walls* walls)
 {
     glm::vec3 tankPos = tank->GetPosition();
@@ -215,10 +148,30 @@ bool RenderObject3D::CollisionTest(Tank* tank, Building* building)
 
 bool RenderObject3D::CollisionTest(Tank* tank1, Tank* tank2)
 {
-    for (auto tank1Primitive : tank1->GetPrimitives())
-        for (auto tank2Primitive : tank2->GetPrimitives())
-            if (RenderObject3D::CollisionTest(tank1Primitive, tank2Primitive))
-                return true;
+    glm::vec3 tank1Pos = tank1->GetPosition();
+    float tank1Radius = tank1->GetTankRadius();
+
+    glm::vec3 tank2Pos = tank2->GetPosition();
+    float tank2Radius = tank2->GetTankRadius();
+
+    auto tank2Min = tank2Pos - glm::vec3(tank2Radius / 2, 0, tank2Radius / 2);
+    auto tank2Max = tank2Pos + glm::vec3(tank2Radius / 2, 0, tank2Radius / 2);
+
+    if ((tank1Pos.x + tank1Radius >= tank2Min.x && tank1Pos.x + tank1Radius <= tank2Max.x &&
+         tank1Pos.z >= tank2Min.z && tank1Pos.z <= tank2Max.z))
+        return true;
+
+    if ((tank1Pos.x - tank1Radius >= tank2Min.x && tank1Pos.x - tank1Radius <= tank2Max.x &&
+         tank1Pos.z >= tank2Min.z && tank1Pos.z <= tank2Max.z))
+        return true;
+
+    if ((tank1Pos.z + tank1Radius >= tank2Min.z && tank1Pos.z + tank1Radius <= tank2Max.z &&
+         tank1Pos.x >= tank2Min.x && tank1Pos.x <= tank2Max.x))
+        return true;
+
+    if ((tank1Pos.z - tank1Radius >= tank2Min.z && tank1Pos.z - tank1Radius <= tank2Max.z &&
+         tank1Pos.x >= tank2Min.x && tank1Pos.x <= tank2Max.x))
+        return true;
 
     return false;
 }
@@ -241,20 +194,67 @@ bool RenderObject3D::CollisionTest(TankProjectile* projectile, Walls* walls)
 bool RenderObject3D::CollisionTest(TankProjectile* projectile, Building* building)
 {
     glm::vec3 projectilePos = projectile->GetPosition();
-    glm::vec3 projectileScl = projectile->GetPrimitives()[0]->GetGlobalScale();
+    float projectileRadius = projectile->GetPrimitives()[0]->GetGlobalScale().x;
 
-    glm::vec3 buildingPos = building->GetPosition();
-    glm::vec3 buildingScl = building->GetScale();
+    glm::vec3 buildingPos = building->GetPrimitives()[0]->GetGlobalPosition();
+    glm::vec3 buildingScl = building->GetPrimitives()[0]->GetGlobalScale();
+
+    auto buildingMin = buildingPos - (buildingScl / glm::vec3(2.0, 2.0, 2.0));
+    auto buildingMax = buildingPos + (buildingScl / glm::vec3(2.0, 2.0, 2.0));
+
+    if ((projectilePos.x + projectileRadius >= buildingMin.x &&
+         projectilePos.x + projectileRadius <= buildingMax.x && projectilePos.z >= buildingMin.z &&
+         projectilePos.z <= buildingMax.z))
+        return true;
+
+    if ((projectilePos.x - projectileRadius >= buildingMin.x &&
+         projectilePos.x - projectileRadius <= buildingMax.x && projectilePos.z >= buildingMin.z &&
+         projectilePos.z <= buildingMax.z))
+        return true;
+
+    if ((projectilePos.z + projectileRadius >= buildingMin.z &&
+         projectilePos.z + projectileRadius <= buildingMax.z && projectilePos.x >= buildingMin.x &&
+         projectilePos.x <= buildingMax.x))
+        return true;
+
+    if ((projectilePos.z - projectileRadius >= buildingMin.z &&
+         projectilePos.z - projectileRadius <= buildingMax.z && projectilePos.x >= buildingMin.x &&
+         projectilePos.x <= buildingMax.x))
+        return true;
 
     return false;
 }
 
 bool RenderObject3D::CollisionTest(TankProjectile* projectile, Tank* tank)
 {
-    for (auto tankPrimitive : tank->GetPrimitives())
-        for (auto projectilePrimitive : projectile->GetPrimitives())
-            if (RenderObject3D::CollisionTest(tankPrimitive, projectilePrimitive))
-                return true;
+    glm::vec3 projectilePos = projectile->GetPosition();
+    float projectileRadius = projectile->GetPrimitives()[0]->GetGlobalScale().x;
+
+    glm::vec3 tankPos = tank->GetPosition();
+    float tankRadius = tank->GetTankRadius();
+
+    auto tankMin = tankPos - glm::vec3(tankRadius / 2, 0, tankRadius / 2);
+    auto tankMax = tankPos + glm::vec3(tankRadius / 2, 0, tankRadius / 2);
+
+    if ((projectilePos.x + projectileRadius >= tankMin.x &&
+         projectilePos.x + projectileRadius <= tankMax.x && projectilePos.z >= tankMin.z &&
+         projectilePos.z <= tankMax.z))
+        return true;
+
+    if ((projectilePos.x - projectileRadius >= tankMin.x &&
+         projectilePos.x - projectileRadius <= tankMax.x && projectilePos.z >= tankMin.z &&
+         projectilePos.z <= tankMax.z))
+        return true;
+
+    if ((projectilePos.z + projectileRadius >= tankMin.z &&
+         projectilePos.z + projectileRadius <= tankMax.z && projectilePos.x >= tankMin.x &&
+         projectilePos.x <= tankMax.x))
+        return true;
+
+    if ((projectilePos.z - projectileRadius >= tankMin.z &&
+         projectilePos.z - projectileRadius <= tankMax.z && projectilePos.x >= tankMin.x &&
+         projectilePos.x <= tankMax.x))
+        return true;
 
     return false;
 }

@@ -28,20 +28,6 @@ namespace m1
     public:
         static bool CollisionTest(RenderObject3D* o1, RenderObject3D* o2);
 
-        static bool CollisionTest(Cube* o1, Cube* o2);
-        static bool CollisionTest(Cube* o1, CylinderCover* o2);
-        static bool CollisionTest(Cube* o1, CylinderBody* o2);
-        static bool CollisionTest(Cube* o1, Sphere* o2);
-
-        static bool CollisionTest(CylinderCover* o1, CylinderCover* o2);
-        static bool CollisionTest(CylinderCover* o1, CylinderBody* o2);
-        static bool CollisionTest(CylinderCover* o1, Sphere* o2);
-
-        static bool CollisionTest(CylinderBody* o1, CylinderBody* o2);
-        static bool CollisionTest(CylinderBody* o1, Sphere* o2);
-
-        static bool CollisionTest(Sphere* o1, Sphere* o2);
-
         static bool CollisionTest(Tank* tank, Walls* walls);
         static bool CollisionTest(Tank* tank, Building* building);
         static bool CollisionTest(Tank* tank1, Tank* tank2);
