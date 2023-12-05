@@ -46,6 +46,13 @@ namespace m1
 
     class Building : public Object3D {
     public:
+        Building();
+
+        void Strike();
+        float GetHp();
+
+    public:
+        virtual void Update(float deltaTimeSeconds) override;
         virtual void InitObject() override;
 
     private:
@@ -65,6 +72,9 @@ namespace m1
                                                                  0, VertexColor::colors.size() - 1);
         static inline std::uniform_real_distribution<float> position =
             std::uniform_real_distribution<float>(-40, 40);
+
+    private:
+        float hp;
     };
 
     class TankBody : public Object3D {
@@ -89,6 +99,8 @@ namespace m1
     class TankProjectile : public Object3D {
     public:
         TankProjectile(Tank* tank);
+
+        bool IsParent(Tank* tank);
 
     public:
         virtual void Update(float deltaTimeSeconds) override;
@@ -150,7 +162,7 @@ namespace m1
     private:
         TankTurret* turret;
         implemented::Camera* camera;
-        int hp;
+        float hp;
         float timeout;
     };
 }

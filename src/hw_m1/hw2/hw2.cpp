@@ -9,6 +9,7 @@
 #include "lab_m1/lab1/lab1.h"
 
 #include "utils/math_utils.h"
+#include <iterator>
 #include <vector>
 #include <iostream>
 
@@ -121,18 +122,28 @@ void Hw2::FrameStart()
     {
         for (auto projectile : projectiles) {
             for (auto enemy : enemies) {
-                if (RenderObject3D::CollisionTest(projectile, enemy)) {
+                if (RenderObject3D::CollisionTest(projectile, enemy) &&
+                    !projectile->IsParent(enemy)) {
                     projectile->state = INACTIVE;
                     enemy->Strike();
                 }
+            }
+
+            if (RenderObject3D::CollisionTest(projectile, tank) && !projectile->IsParent(tank)) {
+                projectile->state = INACTIVE;
+                tank->Strike();
+
+                cout << "Player HP: " << tank->GetTankHP() << endl;
             }
 
             if (RenderObject3D::CollisionTest(projectile, walls))
                 projectile->state = INACTIVE;
 
             for (auto building : buildings)
-                if (RenderObject3D::CollisionTest(projectile, building))
+                if (RenderObject3D::CollisionTest(projectile, building)) {
+                    building->Strike();
                     projectile->state = INACTIVE;
+                }
         }
     }
 
@@ -163,16 +174,41 @@ void Hw2::FrameStart()
         }
     }
 
-    for (auto it_e = enemies.begin(); it_e != enemies.end();) {
-        auto enemy = *it_e;
+    {
+        for (auto it_b = buildings.begin(); it_b != buildings.end();) {
+            auto building = *it_b;
+            bool erased = false;
 
-        if (enemy->state != INACTIVE) {
-            it_e++;
-            continue;
+            if (building->state != INACTIVE) {
+                it_b++;
+                continue;
+            }
+
+            for (auto it_o = objects.begin(); it_o != objects.end(); it_o++) {
+                auto object = *it_o;
+
+                if (object == building) {
+                    delete building;
+                    objects.erase(it_o);
+                    it_b = buildings.erase(it_b);
+                    break;
+                }
+            }
         }
+    }
 
-        it_e = enemies.erase(it_e);
-        delete enemy;
+    {
+        for (auto it_e = enemies.begin(); it_e != enemies.end();) {
+            auto enemy = *it_e;
+
+            if (enemy->state != INACTIVE) {
+                it_e++;
+                continue;
+            }
+
+            it_e = enemies.erase(it_e);
+            delete enemy;
+        }
     }
 
     {
@@ -190,6 +226,11 @@ void Hw2::Update(float deltaTimeSeconds)
     }
 
     {
+        for (auto building : buildings)
+            building->Update(deltaTimeSeconds);
+    }
+
+    {
         for (auto projectile : projectiles)
             projectile->Update(deltaTimeSeconds);
     }
@@ -198,27 +239,94 @@ void Hw2::Update(float deltaTimeSeconds)
         for (auto enemy : enemies) {
             enemy->Update(deltaTimeSeconds);
 
-            bool moveBack = false;
+            {
+                std::vector<Tank*> opponents{ tank };
 
-            enemy->AddPosition({ deltaTimeSeconds * sin(enemy->GetRotation().y * TO_RADIANS), 0,
-                                 deltaTimeSeconds * cos(enemy->GetRotation().y * TO_RADIANS) });
+                for (auto e : enemies) {
+                    if (e == enemy)
+                        continue;
 
-            for (auto building : buildings) {
-                if (RenderObject3D::CollisionTest(enemy, building)) {
-                    moveBack = true;
-                    break;
+                    opponents.push_back(e);
                 }
-            }
 
-            if (RenderObject3D::CollisionTest(tank, enemy) ||
-                RenderObject3D::CollisionTest(enemy, walls) || moveBack) {
-                enemy->AddPosition(
-                    { -deltaTimeSeconds * sin(enemy->GetRotation().y * TO_RADIANS), 0,
-                      -deltaTimeSeconds * cos(enemy->GetRotation().y * TO_RADIANS) });
-                if (enemy->GetRotation().y > 0)
-                    enemy->AddRotation({ 0, 500 * deltaTimeSeconds, 0 });
-                else
-                    enemy->AddRotation({ 0, 500 * -deltaTimeSeconds, 0 });
+                // Find closest opponent
+                std::pair<float, Tank*> selected = { 0.0, nullptr };
+                {
+                    for (auto opponent : opponents) {
+                        if (selected.second == nullptr) {
+                            selected = { glm::distance(enemy->GetPosition(),
+                                                       opponent->GetPosition()),
+                                         opponent };
+                        }
+
+                        auto distance =
+                            glm::distance(enemy->GetPosition(), opponent->GetPosition());
+
+                        if (distance < selected.first)
+                            selected = { distance, opponent };
+                    }
+                }
+
+                float distance = selected.first;
+                Tank* opponent = selected.second;
+
+                glm::vec3 opponentPos = opponent->GetPosition();
+                glm::vec3 pos = enemy->GetPosition();
+
+                glm::vec3 u(sin(enemy->GetRotation().y * TO_RADIANS), 0,
+                            cos(enemy->GetRotation().y * TO_RADIANS));
+                glm::vec3 v(opponentPos.x - pos.x, 0, opponentPos.z - pos.z);
+
+                u = glm::normalize(u);
+                v = glm::normalize(v);
+
+                float angle = acos(glm::dot(u, v)) * TO_DEGREES;
+
+                if (glm::cross(u, v).y > 0.0 && angle > 2.0) {
+                    enemy->AddRotation({ 0, 2 * angle * deltaTimeSeconds, 0 });
+                } else if (glm::cross(u, v).y < 0.0 && angle > 2.0) {
+                    enemy->AddRotation({ 0, 2 * -angle * deltaTimeSeconds, 0 });
+                } else if (angle < 2.0) {
+                    if (distance > 5.0) {
+                        bool moveBack = false;
+                        enemy->AddPosition(
+                            { deltaTimeSeconds * sin(enemy->GetRotation().y * TO_RADIANS), 0,
+                              deltaTimeSeconds * cos(enemy->GetRotation().y * TO_RADIANS) });
+
+                        for (auto building : buildings) {
+                            if (RenderObject3D::CollisionTest(enemy, building)) {
+                                moveBack = true;
+                                break;
+                            }
+                        }
+
+                        for (auto e : enemies) {
+                            if (RenderObject3D::CollisionTest(enemy, e)) {
+                                moveBack = true;
+                                break;
+                            }
+                        }
+
+                        if (RenderObject3D::CollisionTest(enemy, tank) ||
+                            RenderObject3D::CollisionTest(enemy, walls) || moveBack) {
+                            enemy->AddPosition(
+                                { -deltaTimeSeconds * sin(tank->GetRotation().y * TO_RADIANS), 0,
+                                  -deltaTimeSeconds * cos(tank->GetRotation().y * TO_RADIANS) });
+                            if (enemy->GetRotation().y > 0)
+                                enemy->AddRotation({ 0, 500 * deltaTimeSeconds, 0 });
+                            else
+                                enemy->AddRotation({ 0, 500 * -deltaTimeSeconds, 0 });
+                        }
+                    } else {
+                        TankProjectile* projectile = enemy->LaunchProjectile();
+
+                        if (projectile != nullptr) {
+                            projectile->Init();
+                            objects.push_back(projectile);
+                            projectiles.push_back(projectile);
+                        }
+                    }
+                }
             }
         }
     }
@@ -483,13 +591,13 @@ void Hw2::OnKeyPress(int key, int mods)
             for (int i = 0; i < count; i++) {
                 Tank* enemy = new Tank();
 
-                enemy->SetPosition({ Tank::position(Tank::engine), 0, Tank::position(Tank::engine) });
+                enemy->SetPosition(
+                    { Tank::position(Tank::engine), 0, Tank::position(Tank::engine) });
                 enemy->SetRotation({ 0, Tank::rot(Tank::engine), 0 });
                 enemy->Init();
 
                 enemies.push_back(enemy);
             }
-
         }
     }
 }
@@ -501,8 +609,8 @@ void Hw2::OnKeyRelease(int key, int mods)
 void Hw2::OnMouseMove(int mouseX, int mouseY, int deltaX, int deltaY)
 {
     {
-        float sensivityOX = 0.15f;
-        float sensivityOY = 0.15f;
+        float sensivityOX = 2.0;
+        float sensivityOY = 2.0;
 
         if (window->MouseHold(GLFW_MOUSE_BUTTON_RIGHT)) {
             tank->RotateGun(sensivityOX * deltaY * GetLastFrameTime());

@@ -21,6 +21,11 @@ Object3D::Object3D(Object3D& object3D)
 {
 }
 
+Building::Building()
+    : hp(30)
+{
+}
+
 TankProjectile::TankProjectile(Tank* tank)
     : tank(tank)
 {
@@ -155,6 +160,11 @@ void TankTurret::InitObject()
     objects.push_back(gun);
 }
 
+bool TankProjectile::IsParent(Tank* tank)
+{
+    return tank == this->tank;
+}
+
 void TankProjectile::Update(float deltaTimeSeconds)
 {
     switch (state) {
@@ -230,9 +240,19 @@ float Tank::GetTankRadius()
     return bodyPos.z + bodyScl.z / 2 - pos.z;
 }
 
+float Building::GetHp()
+{
+    return hp;
+}
+
 float Tank::GetTankHP()
 {
     return hp;
+}
+
+void Building::Strike()
+{
+    hp -= 10;
 }
 
 void Tank::Strike()
@@ -242,7 +262,7 @@ void Tank::Strike()
 
 TankProjectile* Tank::LaunchProjectile()
 {
-    if (timeout > 0)
+    if (timeout > 0.0)
         return nullptr;
 
     TankProjectile* projectile = new TankProjectile(this);
@@ -266,6 +286,12 @@ void Tank::AddRotation(glm::vec3 qty)
 {
     Transform3D::AddRotation(qty);
     UpdateCamera();
+}
+
+void Building::Update(float deltaTimeSeconds)
+{
+    if (hp <= 0)
+        state = INACTIVE;
 }
 
 void Tank::Update(float deltaTimeSeconds)

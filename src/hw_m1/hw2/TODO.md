@@ -19,7 +19,7 @@
     - [ ] Construcție tanc din forme mai complexe 10p
     - [x] Rotația camerei 5p
     - [x] Rotație turelă tanc 15p
-    - [ ] Atacul jucătorului de către inamici 15p
+    - [x] Atacul jucătorului de către inamici 15p
     - [x] Mișcarea inamicilor în scenă pe o traiectorie aleatoare 10p
     - [x] Desenare clădiri 5p
     - [x] Coliziuni 15p
