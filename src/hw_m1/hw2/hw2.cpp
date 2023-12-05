@@ -176,7 +176,7 @@ void Hw2::FrameStart()
     }
 
     {
-        if (timeLeft <= 0) {
+        if (timeLeft <= 0 || tank->GetTankHP() <= 0 || enemies.empty()) {
             cout << "Game over!" << endl;
             window->Close();
         }
@@ -418,16 +418,16 @@ void Hw2::OnInputUpdate(float deltaTime, int mods)
 
             if (window->KeyHold(GLFW_KEY_A)) {
                 if ((mods & GLFW_MOD_SHIFT) != 0)
-                    tank->AddRotation({ 0, 3 * sensitivityOY * deltaTime, 0 });
+                    tank->AddRotation({ 0, sensitivityOY * deltaTime, 0 });
                 else
-                    tank->AddRotation({ 0, 3 * sensitivityOY * deltaTime, 0 });
+                    tank->AddRotation({ 0, sensitivityOY * deltaTime, 0 });
             }
 
             if (window->KeyHold(GLFW_KEY_D)) {
                 if ((mods & GLFW_MOD_SHIFT) != 0)
-                    tank->AddRotation({ 0, 3 * -sensitivityOY * deltaTime, 0 });
+                    tank->AddRotation({ 0, -sensitivityOY * deltaTime, 0 });
                 else
-                    tank->AddRotation({ 0, 3 * -sensitivityOY * deltaTime, 0 });
+                    tank->AddRotation({ 0, -sensitivityOY * deltaTime, 0 });
             }
         }
     }
@@ -442,6 +442,9 @@ void Hw2::OnKeyPress(int key, int mods)
     if (key == GLFW_KEY_R) {
         cout << "Restart Game" << endl;
 
+        timeLeft = Hw2::count(Hw2::engine) * 60.0;
+        cout << "TimeLeft: " << timeLeft << endl;
+
         {
             for (Building* building : buildings) {
                 for (auto it = objects.begin(); it != objects.end(); it++) {
@@ -452,6 +455,11 @@ void Hw2::OnKeyPress(int key, int mods)
                 }
 
                 delete building;
+            }
+
+            for (auto it = enemies.begin(); it != enemies.end();) {
+                delete *it;
+                it = enemies.erase(it);
             }
 
             buildings.clear();
@@ -469,6 +477,19 @@ void Hw2::OnKeyPress(int key, int mods)
                 objects.push_back(building);
                 buildings.push_back(building);
             }
+
+            count = Tank::count(Tank::engine);
+
+            for (int i = 0; i < count; i++) {
+                Tank* enemy = new Tank();
+
+                enemy->SetPosition({ Tank::position(Tank::engine), 0, Tank::position(Tank::engine) });
+                enemy->SetRotation({ 0, Tank::rot(Tank::engine), 0 });
+                enemy->Init();
+
+                enemies.push_back(enemy);
+            }
+
         }
     }
 }
@@ -484,8 +505,8 @@ void Hw2::OnMouseMove(int mouseX, int mouseY, int deltaX, int deltaY)
         float sensivityOY = 0.15f;
 
         if (window->MouseHold(GLFW_MOUSE_BUTTON_RIGHT)) {
-            tank->RotateGun(sensivityOX * deltaY);
-            tank->RotateTurret(-sensivityOY * deltaX);
+            tank->RotateGun(sensivityOX * deltaY * GetLastFrameTime());
+            tank->RotateTurret(-sensivityOY * deltaX * GetLastFrameTime());
         }
     }
 }
