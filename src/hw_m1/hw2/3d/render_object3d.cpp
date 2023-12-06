@@ -236,24 +236,42 @@ bool RenderObject3D::CollisionTest(TankProjectile* projectile, Tank* tank)
     auto tankMin = tankPos - glm::vec3(tankRadius / 2, 0, tankRadius / 2);
     auto tankMax = tankPos + glm::vec3(tankRadius / 2, 0, tankRadius / 2);
 
+    tankMin.y = 0;
+    tankMax.y = 0;
+
+    for (auto primitive : tank->GetPrimitives()) {
+        float y = primitive->GetGlobalPosition().y * (primitive->GetGlobalScale().y / 2.0);
+
+        if (tankMax.y < y)
+            tankMax.y = y;
+    }
+
     if ((projectilePos.x + projectileRadius >= tankMin.x &&
-         projectilePos.x + projectileRadius <= tankMax.x && projectilePos.z >= tankMin.z &&
-         projectilePos.z <= tankMax.z))
+         projectilePos.x + projectileRadius <= tankMax.x) &&
+        (projectilePos.y - projectileRadius >= tankMin.y &&
+         projectilePos.y + projectileRadius <= tankMax.y) &&
+        (projectilePos.z >= tankMin.z && projectilePos.z <= tankMax.z))
         return true;
 
     if ((projectilePos.x - projectileRadius >= tankMin.x &&
-         projectilePos.x - projectileRadius <= tankMax.x && projectilePos.z >= tankMin.z &&
-         projectilePos.z <= tankMax.z))
+         projectilePos.x - projectileRadius <= tankMax.x) &&
+        (projectilePos.y - projectileRadius >= tankMin.y &&
+         projectilePos.y + projectileRadius <= tankMax.y) &&
+        (projectilePos.z >= tankMin.z && projectilePos.z <= tankMax.z))
         return true;
 
-    if ((projectilePos.z + projectileRadius >= tankMin.z &&
-         projectilePos.z + projectileRadius <= tankMax.z && projectilePos.x >= tankMin.x &&
-         projectilePos.x <= tankMax.x))
+    if ((projectilePos.x >= tankMin.x && projectilePos.x <= tankMax.x) &&
+        (projectilePos.y - projectileRadius >= tankMin.y &&
+         projectilePos.y + projectileRadius <= tankMax.y) &&
+        (projectilePos.z + projectileRadius >= tankMin.z &&
+         projectilePos.z + projectileRadius <= tankMax.z))
         return true;
 
-    if ((projectilePos.z - projectileRadius >= tankMin.z &&
-         projectilePos.z - projectileRadius <= tankMax.z && projectilePos.x >= tankMin.x &&
-         projectilePos.x <= tankMax.x))
+    if ((projectilePos.x >= tankMin.x && projectilePos.x <= tankMax.x) &&
+        (projectilePos.y - projectileRadius >= tankMin.y &&
+         projectilePos.y + projectileRadius <= tankMax.y) &&
+        (projectilePos.z - projectileRadius >= tankMin.z &&
+         projectilePos.z - projectileRadius <= tankMax.z))
         return true;
 
     return false;
