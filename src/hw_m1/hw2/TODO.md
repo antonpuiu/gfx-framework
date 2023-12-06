@@ -26,3 +26,12 @@
         - [x] Tanc - clădire 10p
         - [x] Proiectil - clădire 5p
 
+- [ ] Funcționalități Avansate
+    - [ ] Implementare coliziuni pentru primitive
+    - [ ] Suport pentru obiectele rotite fata de axe
+    - [ ] Eliminare HP cladiri si implementare algoritm A* pentru stabilirea traiectoriei botilor.
+    - [ ] Adaugare suport pentru ferire de proiectile
+    - [ ] Afisare in GUI a:
+      - [ ] Timp ramas
+      - [ ] HP player
+      - [ ] Minimap
