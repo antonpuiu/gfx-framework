@@ -134,6 +134,7 @@ namespace m1
         float GetTankHP();
 
         void Strike();
+        void Heal();
 
         TankProjectile* LaunchProjectile();
 

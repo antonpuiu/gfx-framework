@@ -27,8 +27,20 @@ Hw2::~Hw2()
 void Hw2::Init()
 {
     {
+        stop = false;
+    }
+
+    {
         camera = new implemented::Camera();
         camera->Set(glm::vec3(0, 1, -2), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+    }
+
+    {
+        glm::ivec2 resolution = window->GetResolution();
+        textRenderer = new gfxc::TextRenderer(window->props.selfDir, resolution.x, resolution.y);
+        textRenderer->Load(PATH_JOIN(window->props.selfDir, RESOURCE_PATH::FONTS,
+                                     "BruceForeverRegular-X3jd2.ttf"),
+                           18);
     }
 
     {
@@ -117,6 +129,11 @@ void Hw2::FrameStart()
         glClearColor(0, 0, 0, 1);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glViewport(0, 0, resolution.x, resolution.y);
+    }
+
+    {
+        if (stop)
+            return;
     }
 
     {
@@ -213,14 +230,18 @@ void Hw2::FrameStart()
 
     {
         if (timeLeft <= 0 || tank->GetTankHP() <= 0 || enemies.empty()) {
-            cout << "Game over!" << endl;
-            window->Close();
+            stop = true;
         }
     }
 }
 
 void Hw2::Update(float deltaTimeSeconds)
 {
+    {
+        if (stop)
+            return;
+    }
+
     {
         tank->Update(deltaTimeSeconds);
     }
@@ -338,6 +359,9 @@ void Hw2::Update(float deltaTimeSeconds)
 
 void Hw2::FrameEnd()
 {
+    // if (stop)
+    //     return;
+
     for (auto object : objects)
         for (auto primitive : object->GetPrimitives())
             RenderSimpleMesh(primitive->GetMesh(), shaders["HwShader"], primitive->GetModelMatrix(),
@@ -347,6 +371,15 @@ void Hw2::FrameEnd()
         for (auto primitive : enemy->GetPrimitives())
             RenderEnemyMesh(primitive->GetMesh(), shaders["HwTankShader"],
                             primitive->GetModelMatrix(), primitive->GetColor(), enemy->GetTankHP());
+
+    textRenderer->RenderText(std::to_string(static_cast<int>(tank->GetTankHP())), 1000, 40, 1.0,
+                             VertexColor::GREEN);
+    textRenderer->RenderText(std::to_string(static_cast<int>(timeLeft / 60)) + ":" +
+                                 std::to_string(static_cast<int>(timeLeft) % 60),
+                             700, 700, 1.0, VertexColor::GREEN);
+
+    if (stop)
+        textRenderer->RenderText("GAME OVER", 1280 / 2, 720 / 2, 1.5, VertexColor::RED);
 }
 
 void Hw2::RenderSimpleMesh(Mesh* mesh, Shader* shader, const glm::mat4& modelMatrix,
@@ -599,6 +632,9 @@ void Hw2::OnKeyPress(int key, int mods)
                 enemies.push_back(enemy);
             }
         }
+
+        stop = false;
+        tank->Heal();
     }
 }
 

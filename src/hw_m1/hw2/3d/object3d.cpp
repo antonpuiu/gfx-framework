@@ -257,7 +257,15 @@ void Building::Strike()
 
 void Tank::Strike()
 {
-    hp -= 15;
+    if (hp <= 15)
+        hp = 0;
+    else
+        hp -= 15;
+}
+
+void Tank::Heal()
+{
+    hp = 100;
 }
 
 TankProjectile* Tank::LaunchProjectile()

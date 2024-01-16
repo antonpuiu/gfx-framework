@@ -1,3 +1,5 @@
+#include "hw_m1/hw2/hw2.h"
+#include "lab_extra/basic_text/basic_text.h"
 #include "lab_m1/lab4/lab4.h"
 #include <ctime>
 #include <iostream>

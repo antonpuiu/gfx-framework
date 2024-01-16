@@ -2,6 +2,7 @@
 
 #include "components/simple_scene.h"
 #include "components/camera_input.h"
+#include "components/text_renderer.h"
 #include "lab_m1/lab5/lab_camera.h"
 #include "hw_m1/hw2/3d/object3d.h"
 
@@ -52,5 +53,8 @@ namespace m1
             std::uniform_real_distribution<float>(1, 10);
 
         float timeLeft;
+
+        gfxc::TextRenderer* textRenderer;
+        bool stop;
     };
 } // namespace m1
